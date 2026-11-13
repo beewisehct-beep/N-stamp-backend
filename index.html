@@ -1,0 +1,865 @@
+<title>หลังบ้านน้องแสตมป์</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+Thai:wght@400;500;600&family=Prompt:wght@500;600;700&family=IBM+Plex+Mono:wght@500&display=swap">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.1/dist/chart.umd.js"></script>
+<style>
+/* Layout: red shop band, sticky bar with view tabs + filters, one view at a time (hash-routed). */
+:root{
+  --bg:#F4F5F3; --surface:#FFFFFF; --surface-2:#ECEEEA; --ink:#1C2220; --muted:#5C6662; --line:#DADFD9;
+  --red:#B3261E; --red-ink:#FFFFFF; --gold:#A97A12; --teal:#1F7A74; --slate:#59656B;
+  --good:#2E7D32; --warn:#A86200; --bad:#C62828;
+  --f-display:"Prompt","IBM Plex Sans Thai",system-ui,sans-serif;
+  --f-body:"IBM Plex Sans Thai",system-ui,-apple-system,"Segoe UI",sans-serif;
+  --f-num:"IBM Plex Mono",ui-monospace,"SFMono-Regular",Menlo,monospace;
+}
+@media (prefers-color-scheme: dark){ :root:not([data-theme="light"]){
+  --bg:#121614; --surface:#1A1F1D; --surface-2:#232A27; --ink:#E8ECE9; --muted:#9CA6A1; --line:#313936;
+  --red:#E2645A; --red-ink:#1A0B09; --gold:#DDAE48; --teal:#52B5AC; --slate:#9AA8AE;
+  --good:#6BC070; --warn:#F0A43A; --bad:#F06560; color-scheme:dark; } }
+:root[data-theme="dark"]{
+  --bg:#121614; --surface:#1A1F1D; --surface-2:#232A27; --ink:#E8ECE9; --muted:#9CA6A1; --line:#313936;
+  --red:#E2645A; --red-ink:#1A0B09; --gold:#DDAE48; --teal:#52B5AC; --slate:#9AA8AE;
+  --good:#6BC070; --warn:#F0A43A; --bad:#F06560; color-scheme:dark; }
+
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.55}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
+.wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:600}
+.num{font-family:var(--f-num);font-variant-numeric:tabular-nums}
+
+.band{background:var(--red);color:var(--red-ink)}
+.band .wrap{padding-block:20px 18px;display:flex;flex-wrap:wrap;gap:10px 24px;align-items:end;justify-content:space-between}
+.band h1{font-size:clamp(22px,3.2vw,30px);font-weight:700}
+.band p{margin:2px 0 0;opacity:.85;font-size:13.5px}
+.mode{display:flex;gap:8px;align-items:center;flex-wrap:wrap;font-size:12.5px}
+.srcbadge{padding:4px 10px;border-radius:999px;border:1px solid currentColor;white-space:nowrap}
+.band .linkbtn{font:inherit;font-size:12.5px;background:transparent;color:inherit;border:0;text-decoration:underline;cursor:pointer;padding:4px}
+
+.bar{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--surface);border-bottom:1px solid var(--line)}
+.tabs{display:flex;gap:2px;overflow-x:auto;padding-top:6px;scrollbar-width:thin}
+.tabs a{font-size:13.5px;color:var(--muted);text-decoration:none;padding:8px 12px;border-bottom:2px solid transparent;white-space:nowrap}
+.tabs a[aria-current="page"]{color:var(--ink);border-bottom-color:var(--red);font-weight:600}
+.tabs a:hover{color:var(--ink)}
+.filters{padding-block:8px 10px;display:flex;flex-wrap:wrap;gap:8px 16px;align-items:center;border-top:1px solid var(--line)}
+.filters label{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
+select,input{font:inherit;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
+input[type=number].sm{width:64px}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-wrap:wrap}
+.seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink);padding:5px 11px;cursor:pointer}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
+button:focus-visible,select:focus-visible,input:focus-visible,a:focus-visible,.file:focus-within{outline:2px solid var(--teal);outline-offset:2px}
+.range{font-size:12.5px;color:var(--muted);margin-left:auto}
+
+main.wrap{padding-block:22px 56px}
+.view{display:grid;gap:26px}
+section{display:grid;gap:12px}
+.sec-h{display:flex;flex-wrap:wrap;align-items:baseline;justify-content:space-between;gap:4px 16px}
+.sec-h h2{font-size:19px}
+.sec-h p{margin:0;color:var(--muted);font-size:13px}
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:12px;padding:16px;min-width:0}
+.panel h3{font-size:15px;margin-bottom:10px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(320px,1fr));gap:12px}
+
+.kpis{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:12px;overflow:hidden}
+.kpi{background:var(--surface);padding:14px 16px;display:grid;gap:2px;align-content:start}
+.kpi .k{font-size:12.5px;color:var(--muted)}
+.kpi .v{font-family:var(--f-num);font-size:23px;font-variant-numeric:tabular-nums}
+.kpi .v.neg{color:var(--bad)}
+.kpi .d{font-size:12px}
+.up{color:var(--good)} .down{color:var(--bad)} .flat{color:var(--muted)}
+
+.insights{list-style:none;margin:0;padding:0;display:grid;gap:8px}
+.insights li{display:grid;grid-template-columns:auto 1fr;gap:10px;align-items:start;background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:10px 14px}
+.tag{font-size:11.5px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;border:1px solid}
+.tag.sell{color:var(--red);border-color:var(--red)} .tag.time{color:var(--gold);border-color:var(--gold)}
+.tag.ads{color:var(--teal);border-color:var(--teal)} .tag.want{color:var(--warn);border-color:var(--warn)}
+.tag.money{color:var(--slate);border-color:var(--slate)}
+
+.chartbox{position:relative;height:260px}
+.legend{display:flex;gap:14px;font-size:12.5px;color:var(--muted);margin-top:8px;flex-wrap:wrap}
+.legend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+
+.scroll{overflow-x:auto}
+table{width:100%;border-collapse:collapse;font-size:13.5px}
+th{font-weight:500;color:var(--muted);font-size:12.5px;text-align:left;padding:6px 8px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:8px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+td.r,th.r{text-align:right}
+td.num{white-space:nowrap}
+tr.sub td{font-weight:600;background:var(--surface-2)}
+tr.total td{font-weight:700;font-size:14.5px;border-top:2px solid var(--ink)}
+td.ind{padding-left:24px;color:var(--muted)}
+.share{display:flex;align-items:center;gap:8px;min-width:110px}
+.share span{display:block;height:8px;border-radius:4px;background:var(--red)}
+.pill{display:inline-block;font-size:12px;padding:2px 9px;border-radius:999px;white-space:nowrap;font-weight:500}
+.pill.good{color:var(--good);background:color-mix(in srgb,var(--good) 14%,transparent)}
+.pill.warn{color:var(--warn);background:color-mix(in srgb,var(--warn) 14%,transparent)}
+.pill.bad{color:var(--bad);background:color-mix(in srgb,var(--bad) 14%,transparent)}
+.pill.mute{color:var(--muted);background:var(--surface-2)}
+
+.heat{display:grid;grid-template-columns:34px repeat(var(--cols),minmax(26px,1fr));gap:3px;min-width:520px;font-size:11.5px}
+.heat .h{color:var(--muted);text-align:center;font-family:var(--f-num)}
+.heat .dl{color:var(--muted);align-self:center}
+.heat .c{height:28px;border-radius:4px}
+.heat .c.top{outline:2px solid var(--ink);outline-offset:-2px}
+
+.stack{display:flex;height:12px;border-radius:6px;overflow:hidden;background:var(--surface-2)}
+.who{display:grid;gap:8px}
+.who .row{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.segcards{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.segcard{display:grid;gap:8px;align-content:start}
+.segcard .hd{display:flex;justify-content:space-between;align-items:baseline;gap:8px}
+.segcard .hd h3{margin:0;display:flex;align-items:center;gap:8px}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block}
+.facts{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:13px;margin:0}
+.facts dt{color:var(--muted)} .facts dd{margin:0}
+
+/* entry */
+.entry{display:grid;grid-template-columns:minmax(0,1.1fr) minmax(0,1fr);gap:12px}
+@media (max-width:860px){.entry{grid-template-columns:1fr}}
+form.f{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px 12px;align-items:end}
+form.f label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+form.f .wide{grid-column:1/-1}
+.actions{grid-column:1/-1;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.btn{font:inherit;font-size:13.5px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:8px;padding:7px 14px;cursor:pointer}
+.btn:hover{background:var(--surface-2)}
+.btn.primary{background:var(--red);border-color:var(--red);color:var(--red-ink);font-weight:600}
+.btn.primary:hover{filter:brightness(1.05)}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+.btn.tiny{font-size:12px;padding:3px 9px}
+.btn.danger{color:var(--bad);border-color:color-mix(in srgb,var(--bad) 50%,var(--line))}
+.msg{font-size:12.5px;min-height:1em;margin:0}
+.msg.ok{color:var(--good)} .msg.err{color:var(--bad)}
+.note{font-size:12.5px;color:var(--muted)}
+.small{font-size:12.5px;color:var(--muted);margin:0}
+.total-line{font-size:13px;color:var(--muted)}
+.total-line b{color:var(--ink);font-family:var(--f-num)}
+
+.imp{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:12px}
+.imp .panel{display:grid;gap:8px;align-content:start}
+.imp code{font-family:var(--f-num);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:block;overflow-x:auto;white-space:nowrap}
+.file{display:inline-flex;align-items:center;gap:8px;font-size:13px;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--surface-2)}
+.file input{position:absolute;opacity:0;width:1px;height:1px}
+.banner{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+@media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
+</style>
+
+<header class="band">
+  <div class="wrap">
+    <div>
+      <h1>หลังบ้านน้องแสตมป์ ของฝาก</h1>
+      <p>ยอดขาย · กลุ่มลูกค้า · รายได้และค่าใช้จ่าย · ผลแอด · แม่สาย เชียงราย</p>
+    </div>
+    <div class="mode">
+      <span class="srcbadge" id="srcBadge">กำลังโหลด…</span>
+      <button class="linkbtn" type="button" id="sampleToggle" hidden>ดูข้อมูลตัวอย่าง</button>
+    </div>
+  </div>
+</header>
+
+<div class="bar">
+  <div class="wrap">
+    <nav class="tabs" aria-label="หน้า">
+      <a href="#overview">ภาพรวม</a>
+      <a href="#entry">บันทึกข้อมูล</a>
+      <a href="#customers">กลุ่มลูกค้า</a>
+      <a href="#finance">รายได้ vs ค่าใช้จ่าย</a>
+      <a href="#products">สินค้า</a>
+      <a href="#ads">แอด</a>
+      <a href="#import">นำเข้าไฟล์</a>
+    </nav>
+  </div>
+  <div class="wrap filters">
+    <div class="seg" role="group" aria-label="ช่วงเวลา" id="periodSeg">
+      <button type="button" data-d="7">7 วัน</button>
+      <button type="button" data-d="30">30 วัน</button>
+      <button type="button" data-d="90">90 วัน</button>
+      <button type="button" data-d="180">180 วัน</button>
+    </div>
+    <label for="chanSel">ช่องทาง <select id="chanSel"><option value="">ทั้งหมด</option></select></label>
+    <label for="marginIn">กำไรขั้นต้น <input id="marginIn" class="sm" type="number" min="5" max="90" step="1" value="30"> %</label>
+    <label for="costSel">ต้นทุนสินค้าคิดจาก
+      <select id="costSel"><option value="margin">% กำไรขั้นต้น</option><option value="purchase">ยอดซื้อของเข้าร้านที่บันทึก</option></select>
+    </label>
+    <span class="range" id="rangeTxt"></span>
+  </div>
+</div>
+
+<main class="wrap">
+  <!-- OVERVIEW -->
+  <div class="view" id="v-overview">
+    <div class="banner" id="sampleBanner" hidden></div>
+    <section aria-labelledby="h-sum">
+      <div class="sec-h"><h2 id="h-sum">ภาพรวม</h2><p>เทียบกับช่วงก่อนหน้าที่ยาวเท่ากัน</p></div>
+      <div class="kpis" id="kpis"></div>
+    </section>
+    <section aria-labelledby="h-ins">
+      <div class="sec-h"><h2 id="h-ins">ควรทำอะไรต่อ</h2><p>สรุปอัตโนมัติจากตัวเลขในช่วงที่เลือก</p></div>
+      <ul class="insights" id="insights"></ul>
+    </section>
+    <section aria-labelledby="h-when">
+      <div class="sec-h"><h2 id="h-when">ขายดีช่วงไหน</h2><p>ใช้วางกะพนักงาน เติมของ และตั้งเวลายิงแอด</p></div>
+      <div class="panel">
+        <h3>ยอดขายเทียบค่าแอด</h3>
+        <div class="chartbox"><canvas id="trendChart" aria-label="กราฟยอดขายและค่าแอด"></canvas></div>
+        <div class="legend"><span><i style="background:var(--red)"></i>ยอดขาย (บาท)</span><span><i style="background:var(--teal)"></i>ค่าแอด (บาท)</span></div>
+      </div>
+      <div class="panel">
+        <h3>วันและชั่วโมงที่ขายดี</h3>
+        <div class="scroll"><div class="heat" id="heat"></div></div>
+        <p class="note" id="heatNote" style="margin:10px 0 0"></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- ENTRY -->
+  <div class="view" id="v-entry" hidden>
+    <section aria-labelledby="h-entry">
+      <div class="sec-h"><h2 id="h-entry">บันทึกข้อมูล</h2><p id="entryHint">บันทึกแล้วตัวเลขทุกหน้าอัปเดตทันที ทุกคนที่เปิดหน้านี้เห็นข้อมูลชุดเดียวกัน</p></div>
+      <div class="seg" role="group" aria-label="ประเภทข้อมูล" id="formSeg">
+        <button type="button" data-f="sale" aria-pressed="true">ขายสินค้า</button>
+        <button type="button" data-f="exp">ค่าใช้จ่าย</button>
+        <button type="button" data-f="ad">ค่าแอด</button>
+        <button type="button" data-f="req">ลูกค้าถามหา</button>
+      </div>
+      <div class="entry">
+        <div class="panel">
+          <form class="f" id="f-sale" autocomplete="off">
+            <label>วันที่<input type="date" id="s-date" required></label>
+            <label>เวลา<input type="time" id="s-time" required></label>
+            <label class="wide">สินค้า<input id="s-product" list="dl-products" placeholder="เช่น ข้าวเกรียบกุ้ง" required></label>
+            <label>จำนวน (ชิ้น)<input type="number" id="s-qty" min="1" step="1" value="1" required></label>
+            <label>ราคาต่อชิ้น (บาท)<input type="number" id="s-price" min="0" step="1" required></label>
+            <label>ช่องทาง<select id="s-channel"><option>หน้าร้าน</option><option>Facebook</option><option>LINE OA</option><option>TikTok Shop</option><option>Shopee</option></select></label>
+            <label>ลูกค้าเป็นคน<select id="s-customer"><option>ไทย</option><option>จีน</option><option>เมียนมา</option><option>ลาว</option><option>ชาติอื่น</option></select></label>
+            <label>ประเภทลูกค้า<select id="s-ctype"><option>ขาจร</option><option>กรุ๊ปทัวร์</option><option>ลูกค้าประจำ</option><option>ขายส่ง</option></select></label>
+            <div class="actions"><button class="btn primary" type="submit">บันทึกการขาย</button><span class="total-line">รวม <b id="s-total">฿0</b></span><p class="msg" id="m-sale"></p></div>
+          </form>
+          <form class="f" id="f-exp" autocomplete="off" hidden>
+            <label>วันที่จ่าย<input type="date" id="e-date" required></label>
+            <label>หมวด<select id="e-cat"></select></label>
+            <label>จำนวนเงิน (บาท)<input type="number" id="e-amount" min="0" step="1" required></label>
+            <label class="wide">รายละเอียด<input id="e-note" placeholder="เช่น ค่าไฟเดือน ต.ค."></label>
+            <p class="small wide">ค่าแอดบันทึกที่แถบ “ค่าแอด” เพื่อดู ROAS แยกแคมเปญ ไม่ต้องบันทึกซ้ำที่นี่</p>
+            <div class="actions"><button class="btn primary" type="submit">บันทึกค่าใช้จ่าย</button><p class="msg" id="m-exp"></p></div>
+          </form>
+          <form class="f" id="f-ad" autocomplete="off" hidden>
+            <label>วันที่<input type="date" id="a-date" required></label>
+            <label>แพลตฟอร์ม<select id="a-platform"><option>Facebook</option><option>TikTok</option><option>LINE</option><option>Google</option><option>Shopee</option></select></label>
+            <label class="wide">ชื่อแคมเปญ<input id="a-campaign" list="dl-campaigns" placeholder="เช่น FB กระเช้าปีใหม่" required></label>
+            <label>ค่าแอด (บาท)<input type="number" id="a-spend" min="0" step="1" required></label>
+            <label>คลิก<input type="number" id="a-clicks" min="0" step="1"></label>
+            <label>ทักแชท<input type="number" id="a-messages" min="0" step="1"></label>
+            <label>ออเดอร์<input type="number" id="a-orders" min="0" step="1"></label>
+            <label>ยอดขายจากแอด (บาท)<input type="number" id="a-revenue" min="0" step="1"></label>
+            <div class="actions"><button class="btn primary" type="submit">บันทึกค่าแอด</button><p class="msg" id="m-ad"></p></div>
+          </form>
+          <form class="f" id="f-req" autocomplete="off" hidden>
+            <label>วันที่<input type="date" id="r-date" required></label>
+            <label class="wide">สินค้าที่ลูกค้าถามหา<input id="r-product" list="dl-reqs" placeholder="เช่น ชาอู่หลงดอยแม่สลอง" required></label>
+            <label>ถามทาง<select id="r-source"><option>หน้าร้าน</option><option>แชท Facebook</option><option>LINE OA</option><option>TikTok</option><option>โทรศัพท์</option></select></label>
+            <label>ลูกค้าเป็นคน<select id="r-customer"><option>ไทย</option><option>จีน</option><option>เมียนมา</option><option>ลาว</option><option>ชาติอื่น</option></select></label>
+            <div class="actions"><button class="btn primary" type="submit">บันทึกคำถาม</button><p class="msg" id="m-req"></p></div>
+          </form>
+        </div>
+        <div class="panel">
+          <h3 id="recentTitle">รายการขายล่าสุด</h3>
+          <div class="scroll"><table><tbody id="recentBody"></tbody></table></div>
+        </div>
+      </div>
+      <datalist id="dl-products"></datalist><datalist id="dl-campaigns"></datalist><datalist id="dl-reqs"></datalist>
+    </section>
+  </div>
+
+  <!-- CUSTOMERS -->
+  <div class="view" id="v-customers" hidden>
+    <section aria-labelledby="h-cust">
+      <div class="sec-h"><h2 id="h-cust">กลุ่มลูกค้า</h2>
+        <div class="seg" role="group" aria-label="แบ่งกลุ่มตาม" id="segBy">
+          <button type="button" data-k="customer" aria-pressed="true">สัญชาติ</button>
+          <button type="button" data-k="ctype">ประเภทลูกค้า</button>
+          <button type="button" data-k="channel">ช่องทาง</button>
+        </div>
+      </div>
+      <div class="panel">
+        <div class="stack" id="segStack" style="height:16px"></div>
+        <div class="legend" id="segLegend"></div>
+      </div>
+      <div class="panel scroll">
+        <table>
+          <thead><tr><th>กลุ่ม</th><th class="r">ยอดขาย</th><th class="r">สัดส่วน</th><th class="r">รายการ</th><th class="r">เฉลี่ย/รายการ</th><th class="r">ชิ้น/รายการ</th><th class="r">เทียบช่วงก่อน</th></tr></thead>
+          <tbody id="segBody"></tbody>
+        </table>
+      </div>
+      <div class="segcards" id="segCards"></div>
+    </section>
+  </div>
+
+  <!-- FINANCE -->
+  <div class="view" id="v-finance" hidden>
+    <section aria-labelledby="h-fin">
+      <div class="sec-h"><h2 id="h-fin">รายได้ vs ค่าใช้จ่าย</h2><p>ทุกช่องทางรวมกัน · ค่าใช้จ่ายนับตามวันที่จ่าย ดูช่วง 30 วันขึ้นไปจะใกล้ความจริงกว่า</p></div>
+      <div class="kpis" id="finKpis"></div>
+      <div class="grid2">
+        <div class="panel scroll">
+          <h3>งบกำไรขาดทุน</h3>
+          <table><thead><tr><th>รายการ</th><th class="r">ช่วงนี้</th><th class="r">ช่วงก่อน</th><th class="r">% ของรายได้</th></tr></thead><tbody id="plBody"></tbody></table>
+          <p class="note" id="cogsNote"></p>
+        </div>
+        <div class="panel">
+          <h3>ค่าใช้จ่ายแยกหมวด</h3>
+          <div class="who" id="expBreak"></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h3>รายเดือน: รายได้ ค่าใช้จ่าย กำไร (6 เดือน)</h3>
+        <div class="chartbox"><canvas id="finChart" aria-label="กราฟรายได้ ค่าใช้จ่าย กำไรรายเดือน"></canvas></div>
+        <div class="legend"><span><i style="background:var(--red)"></i>รายได้</span><span><i style="background:var(--slate)"></i>ค่าใช้จ่ายรวม (ต้นทุน + แอด + ค่าดำเนินงาน)</span><span><i style="background:var(--good)"></i>กำไรสุทธิ</span></div>
+        <p class="note" id="finMonthNote"></p>
+      </div>
+    </section>
+  </div>
+
+  <!-- PRODUCTS -->
+  <div class="view" id="v-products" hidden>
+    <section aria-labelledby="h-what">
+      <div class="sec-h"><h2 id="h-what">อะไรขายดี</h2><p>เรียงตามยอดขาย</p></div>
+      <div class="panel scroll">
+        <table>
+          <thead><tr><th>#</th><th>สินค้า</th><th class="r">ชิ้น</th><th class="r">ยอดขาย</th><th>สัดส่วน</th><th class="r">เทียบช่วงก่อน</th><th>ขายดีกับลูกค้า</th></tr></thead>
+          <tbody id="prodBody"></tbody>
+        </table>
+      </div>
+      <div class="grid2">
+        <div class="panel"><h3>ยอดขายรายเดือน (6 เดือน)</h3><div class="chartbox"><canvas id="monthChart" aria-label="กราฟยอดขายรายเดือน"></canvas></div><p class="note" id="monthNote"></p></div>
+        <div class="panel"><h3>ยอดขายแยกช่องทาง</h3><div class="who" id="chan"></div></div>
+      </div>
+    </section>
+    <section aria-labelledby="h-want">
+      <div class="sec-h"><h2 id="h-want">ลูกค้าถามหาอะไร</h2><p>จากแชทและที่หน้าร้านจดไว้</p></div>
+      <div class="panel scroll">
+        <table>
+          <thead><tr><th>สินค้าที่ถาม</th><th class="r">จำนวนครั้ง</th><th class="r">เทียบช่วงก่อน</th><th>มาจาก</th><th>ใครถาม</th><th>สถานะ</th></tr></thead>
+          <tbody id="wantBody"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+
+  <!-- ADS -->
+  <div class="view" id="v-ads" hidden>
+    <section aria-labelledby="h-ads">
+      <div class="sec-h"><h2 id="h-ads">ผลการยิงแอด</h2><p id="beTxt"></p></div>
+      <div class="panel scroll">
+        <table>
+          <thead><tr><th>แคมเปญ</th><th>แพลตฟอร์ม</th><th class="r">ค่าแอด</th><th class="r">คลิก</th><th class="r">ทักแชท</th><th class="r">ต้นทุน/แชท</th><th class="r">ออเดอร์</th><th class="r">ยอดขาย</th><th class="r">ROAS</th><th>ผล</th></tr></thead>
+          <tbody id="adsBody"></tbody>
+        </table>
+      </div>
+      <p class="note">ยอดขายจากแอดเป็นตัวเลขที่แพลตฟอร์มรายงาน อาจนับซ้ำกับยอดหน้าร้าน ใช้เทียบระหว่างแคมเปญมากกว่าดูยอดรวม</p>
+    </section>
+  </div>
+
+  <!-- IMPORT -->
+  <div class="view" id="v-import" hidden>
+    <section aria-labelledby="h-imp">
+      <div class="sec-h"><h2 id="h-imp">นำเข้าไฟล์ CSV</h2><p>บันทึกจาก Excel/Google Sheets เป็น .csv (UTF-8) · ข้อมูลจะถูกเพิ่มต่อจากที่มีอยู่</p></div>
+      <div class="imp" id="impGrid"></div>
+    </section>
+  </div>
+</main>
+
+<script>
+(function(){
+"use strict";
+/* ---------- helpers ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const fmt=n=>Math.round(n).toLocaleString("th-TH");
+const baht=n=>(n<0?"-":"")+"฿"+fmt(Math.abs(n));
+const pad=n=>String(n).padStart(2,"0");
+const iso=d=>d.getFullYear()+"-"+pad(d.getMonth()+1)+"-"+pad(d.getDate());
+const parseISO=s=>{const [y,m,d]=s.split("-").map(Number);return new Date(y,m-1,d)};
+const addDays=(s,n)=>{const d=parseISO(s);d.setDate(d.getDate()+n);return iso(d)};
+const uid=()=>Date.now().toString(36)+Math.random().toString(36).slice(2,7);
+const DOW=["อา","จ","อ","พ","พฤ","ศ","ส"];
+const DOW_FULL=["วันอาทิตย์","วันจันทร์","วันอังคาร","วันพุธ","วันพฤหัสบดี","วันศุกร์","วันเสาร์"];
+const MON=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+const EXP_CATS=["ซื้อสินค้าเข้าร้าน","ค่าเช่าร้าน","เงินเดือน/ค่าแรง","ค่าน้ำ-ค่าไฟ","ค่าขนส่ง","บรรจุภัณฑ์/ถุง/กล่อง","ค่าธรรมเนียมแพลตฟอร์ม","ผ่อนค่าตกแต่งร้าน","อื่นๆ"];
+const PURCHASE="ซื้อสินค้าเข้าร้าน";
+const css=v=>getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+function mulberry32(a){return function(){a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296}}
+function pickW(r,obj){const ks=Object.keys(obj);let s=0;ks.forEach(k=>s+=obj[k]);let x=r()*s;for(const k of ks){x-=obj[k];if(x<=0)return k}return ks[ks.length-1]}
+const pctChange=(a,b)=>b?(a-b)/b:null;
+function chg(p,invert){if(p===null)return '<span class="flat">–</span>';const up=p>=0;const cls=Math.abs(p)<.02?"flat":((up!==!!invert)?"up":"down");return `<span class="${cls}">${up?"▲":"▼"} ${Math.abs(p*100).toFixed(0)}%</span>`}
+const deltaHTML=(p,inv)=>p===null?'<span class="d flat">ไม่มีข้อมูลช่วงก่อน</span>':`<span class="d">${chg(p,inv)} จากช่วงก่อน</span>`;
+function pref(k,v){try{if(v===undefined)return JSON.parse(localStorage.getItem(k)||"null");localStorage.setItem(k,JSON.stringify(v))}catch(e){return null}}
+const sleep=ms=>new Promise(r=>setTimeout(r,ms));
+
+/* ---------- sample data (generated in the page, never written to the store) ---------- */
+const PRODUCTS=[
+ {name:"ข้าวเกรียบกุ้ง",price:60,w:18,cn:1,mm:1.3},{name:"หมูแผ่นกรอบ",price:120,w:14,cn:1.2,mm:1},
+ {name:"แคบหมูไร้มัน",price:100,w:11,cn:.8,mm:1.2},{name:"ทองม้วนกรอบ",price:80,w:12,cn:1.7,mm:1},
+ {name:"น้ำผึ้งป่าแท้",price:250,w:7,cn:2.5,mm:.8},{name:"น้ำพริกตาแดง",price:70,w:9,cn:.4,mm:1.4},
+ {name:"ข้าวแต๋นน้ำแตงโม",price:50,w:8,cn:.9,mm:1.1},{name:"กระเช้าของฝาก",price:399,w:4,cn:2.2,mm:.6},
+ {name:"ถั่วตัดงาดำ",price:45,w:6,cn:.7,mm:1.3}];
+const REQ_W={"ชาอู่หลงดอยแม่สลอง":14,"กาแฟดอยตุง":11,"กระเช้าของฝาก":9,"ขนมเปี๊ยะไส้ทุเรียน":9,"ขนมไทยกล่องของขวัญ":8,"น้ำผึ้งป่าแท้":8,"ข้าวเกรียบกุ้ง":7,"ไส้อั่วสุญญากาศ":6,"หมูแผ่นกรอบ":6,"ทองม้วนกรอบ":4,"น้ำพริกตาแดง":3};
+const CAMPAIGNS=[
+ {name:"FB ข้าวเกรียบ+หมูแผ่น ซื้อ 3 ลด 10%",platform:"Facebook",budget:350,cpc:3.2,msg:.12,roas:4.4,aov:310,from:179},
+ {name:"TikTok คลิปพาเดินร้านแม่สาย",platform:"TikTok",budget:300,cpc:1.4,msg:.05,roas:3.1,aov:240,from:120},
+ {name:"FB กระเช้าปีใหม่ ส่งทั่วไทย",platform:"Facebook",budget:450,cpc:4.5,msg:.15,roas:5.6,aov:820,from:40},
+ {name:"FB น้ำผึ้งป่า กลุ่มเป้าหมายกว้าง",platform:"Facebook",budget:250,cpc:5.8,msg:.04,roas:1.3,aov:380,from:150},
+ {name:"LINE OA บรอดแคสต์ลูกค้าเก่า",platform:"LINE",budget:60,cpc:.8,msg:.2,roas:7.5,aov:290,from:179}];
+function genSample(){
+  const r=mulberry32(20261111),orders=[],ads=[],reqs=[],exp=[];
+  const end=new Date();end.setHours(0,0,0,0);
+  const SHOP_H={8:2,9:5,10:9,11:11,12:7,13:6,14:7,15:9,16:10,17:7,18:4,19:2};
+  const TOUR_H={9:3,10:10,11:8,14:5,15:9,16:6};
+  const ONL_H={9:2,10:3,11:3,12:5,13:3,14:3,15:3,16:3,17:3,18:4,19:6,20:9,21:8,22:4};
+  const monthRev={};
+  for(let i=179;i>=0;i--){
+    const d=new Date(end);d.setDate(end.getDate()-i);const ds=iso(d),dow=d.getDay(),m=d.getMonth();
+    let f=(dow===0||dow===6)?1.5:(dow===5?1.15:1);
+    f*=[1.3,1.25,1.05,1.25,.95,.8,.8,.8,.85,1,1.2,1.35][m];
+    const n=Math.round(24*f*(.8+.4*r()));
+    for(let k=0;k<n;k++){
+      const ch=pickW(r,{"หน้าร้าน":62,"Facebook":13,"LINE OA":10,"TikTok Shop":15});
+      const shop=ch==="หน้าร้าน";
+      const ctype=shop?pickW(r,{"ขาจร":55,"กรุ๊ปทัวร์":24,"ลูกค้าประจำ":13,"ขายส่ง":8}):pickW(r,{"ขาจร":52,"ลูกค้าประจำ":42,"ขายส่ง":6});
+      const cust=ctype==="กรุ๊ปทัวร์"?pickW(r,{"จีน":62,"ไทย":30,"เมียนมา":8}):ctype==="ขายส่ง"?pickW(r,{"เมียนมา":55,"ไทย":40,"ลาว":5}):shop?pickW(r,{"ไทย":58,"จีน":16,"เมียนมา":24,"ลาว":2}):pickW(r,{"ไทย":88,"จีน":6,"เมียนมา":6});
+      const w={};PRODUCTS.forEach(p=>{let x=p.w*(cust==="จีน"?p.cn:cust==="เมียนมา"?p.mm:1);if(p.name==="กระเช้าของฝาก"&&(m>=10||m===0))x*=2.6;if(ctype==="ขายส่ง"&&p.price>200)x*=.2;w[p.name]=x});
+      const pn=pickW(r,w),p=PRODUCTS.find(x=>x.name===pn);
+      let qty=1+Math.floor(r()*r()*4),price=p.price;
+      if(ctype==="กรุ๊ปทัวร์")qty+=1+Math.floor(r()*3);
+      if(ctype==="ขายส่ง"){qty=10+Math.floor(r()*20);price=Math.round(p.price*.85)}
+      const hour=+pickW(r,shop?(ctype==="กรุ๊ปทัวร์"?TOUR_H:SHOP_H):ONL_H);
+      orders.push({id:"s"+i+"-"+k,date:ds,hour,product:pn,qty,price,channel:ch,customer:cust,ctype});
+      const mk=ds.slice(0,7);monthRev[mk]=(monthRev[mk]||0)+qty*price;
+    }
+    CAMPAIGNS.forEach(c=>{
+      if(i>c.from)return;
+      const spend=Math.round(c.budget*(.85+.3*r())),clicks=Math.round(spend/c.cpc*(.85+.3*r()));
+      const messages=Math.round(clicks*c.msg*(.8+.4*r())),revenue=Math.round(spend*c.roas*(.6+.8*r()));
+      ads.push({id:"a"+i+c.from,date:ds,campaign:c.name,platform:c.platform,spend,clicks,messages,orders:Math.round(revenue/c.aov),revenue});
+    });
+    const nr=2+Math.floor(r()*6*f/1.2);
+    for(let k=0;k<nr;k++){const pr=pickW(r,REQ_W);const zh=/ชา|กาแฟ|กระเช้า|น้ำผึ้ง/.test(pr);reqs.push({id:"r"+i+"-"+k,date:ds,product:pr,source:pickW(r,{"แชท Facebook":45,"LINE OA":30,"หน้าร้าน":25}),customer:pickW(r,zh?{"จีน":45,"ไทย":45,"เมียนมา":10}:{"ไทย":70,"จีน":10,"เมียนมา":20})})}
+    if(dow===1||dow===4){const mk=ds.slice(0,7);exp.push({id:"p"+i,date:ds,category:PURCHASE,amount:Math.round(26*f*170*3.5*.7*(.85+.3*r())),note:"สั่งของจากซัพพลายเออร์"})}
+    if(d.getDate()===1){
+      exp.push({id:"x1"+i,date:ds,category:"ค่าเช่าร้าน",amount:15000,note:"ค่าเช่าห้องแถว"});
+      exp.push({id:"x2"+i,date:ds,category:"ผ่อนค่าตกแต่งร้าน",amount:9000,note:"ผ่อนงานตกแต่ง"});
+    }
+    if(d.getDate()===28){
+      exp.push({id:"x3"+i,date:ds,category:"เงินเดือน/ค่าแรง",amount:26000,note:"พนักงาน 2 คน"});
+      exp.push({id:"x4"+i,date:ds,category:"ค่าน้ำ-ค่าไฟ",amount:Math.round(3800+r()*1400),note:"ค่าไฟ+น้ำ"});
+      exp.push({id:"x5"+i,date:ds,category:"ค่าธรรมเนียมแพลตฟอร์ม",amount:Math.round(1800+r()*900),note:"TikTok Shop / ค่าโอน"});
+    }
+    if(d.getDate()===15){
+      exp.push({id:"x6"+i,date:ds,category:"บรรจุภัณฑ์/ถุง/กล่อง",amount:Math.round(2200+r()*1500),note:"ถุง กล่อง ตะกร้า"});
+      exp.push({id:"x7"+i,date:ds,category:"ค่าขนส่ง",amount:Math.round(1500+r()*1500),note:"ส่งของออนไลน์"});
+    }
+  }
+  return {orders,ads,reqs,exp};
+}
+
+/* ---------- state ---------- */
+const SAMPLE=genSample();
+const LIVE={orders:[],ads:[],reqs:[],exp:[]};
+let DB=null,canWrite=false,dbState="loading",forceSample=false;
+let DATA=SAMPLE;
+let period=30,channel="",margin=.30,costMode="margin",segBy="customer",formType="sale";
+const ui=pref("ns_ui2");if(ui){period=ui.period||30;channel=ui.channel||"";margin=ui.margin||.30;costMode=ui.costMode||"margin";segBy=ui.segBy||"customer"}
+const saveUI=()=>pref("ns_ui2",{period,channel,margin,costMode,segBy});
+let charts={};
+
+const COLS={orders:"sales",ads:"ads",reqs:"reqs",exp:"expenses"};
+const liveCount=()=>LIVE.orders.length+LIVE.ads.length+LIVE.reqs.length+LIVE.exp.length;
+function pickData(){
+  const useSample=forceSample||liveCount()===0;
+  DATA=useSample?SAMPLE:LIVE;
+  const badge=$("#srcBadge"),tog=$("#sampleToggle"),ban=$("#sampleBanner");
+  if(dbState==="loading"){badge.textContent="กำลังโหลดข้อมูล…"}
+  else if(useSample){badge.textContent="กำลังแสดงข้อมูลตัวอย่าง"}
+  else badge.textContent=`ข้อมูลจริง · ขาย ${fmt(LIVE.orders.length)} · ค่าใช้จ่าย ${fmt(LIVE.exp.length)} · แอด ${fmt(LIVE.ads.length)} · คำถาม ${fmt(LIVE.reqs.length)}`;
+  tog.hidden=liveCount()===0;tog.textContent=forceSample?"กลับไปดูข้อมูลจริง":"ดูข้อมูลตัวอย่าง";
+  let b="";
+  if(dbState==="none")b=`<span class="pill warn">บันทึกไม่ได้</span> หน้านี้เปิดนอก claude.ai หรือยังไม่ได้ลงชื่อเข้าใช้ จึงแสดงข้อมูลตัวอย่างอย่างเดียว`;
+  else if(dbState==="slow")b=`<span class="pill warn">ยังเชื่อมต่อไม่ได้</span> ฐานข้อมูลยังไม่ตอบ ตัวเลขด้านล่างอาจยังไม่ใช่ล่าสุด`;
+  else if(useSample&&dbState==="ready"&&!forceSample)b=`<span class="pill mute">ตัวอย่าง</span> ตัวเลขทั้งหมดเป็นข้อมูลสมมติ จะเปลี่ยนเป็นของจริงทันทีที่บันทึกรายการแรก <a href="#entry">ไปที่บันทึกข้อมูล</a>`;
+  else if(forceSample)b=`<span class="pill mute">ตัวอย่าง</span> กำลังดูข้อมูลสมมติ ข้อมูลจริงยังอยู่ครบ`;
+  ban.hidden=!b;ban.innerHTML=b;
+}
+
+function anchorDate(){let mx="";for(const o of DATA.orders)if(o.date>mx)mx=o.date;for(const e of DATA.exp)if(e.date>mx)mx=e.date;return mx||iso(new Date())}
+function windows(){const end=anchorDate(),start=addDays(end,-(period-1)),pEnd=addDays(start,-1),pStart=addDays(pEnd,-(period-1));return {start,end,pStart,pEnd}}
+const inR=(d,a,b)=>d>=a&&d<=b;
+const rev=a=>a.reduce((s,o)=>s+o.qty*o.price,0);
+const sum=(a,k)=>a.reduce((s,o)=>s+(+o[k]||0),0);
+
+/* finance for a date window (all channels) */
+function finance(a,b,ordersAll,adsAll,expAll){
+  const R=rev(ordersAll.filter(o=>inR(o.date,a,b)));
+  const ex=expAll.filter(e=>inR(e.date,a,b));
+  const purchase=sum(ex.filter(e=>e.category===PURCHASE),"amount");
+  const cogs=costMode==="margin"?R*(1-margin):purchase;
+  const ad=sum(adsAll.filter(x=>inR(x.date,a,b)),"spend");
+  const cats={};ex.filter(e=>e.category!==PURCHASE).forEach(e=>cats[e.category]=(cats[e.category]||0)+(+e.amount||0));
+  const opex=Object.values(cats).reduce((s,v)=>s+v,0);
+  const gross=R-cogs,net=gross-ad-opex;
+  return {R,cogs,gross,ad,opex,cats,net,purchase};
+}
+
+/* ---------- render ---------- */
+let view="overview";
+function render(){
+  pickData();
+  const W=windows();
+  const ordAll=DATA.orders;
+  const ord=ordAll.filter(o=>!channel||o.channel===channel);
+  const cur=ord.filter(o=>inR(o.date,W.start,W.end)),prev=ord.filter(o=>inR(o.date,W.pStart,W.pEnd));
+  const adC=DATA.ads.filter(a=>inR(a.date,W.start,W.end)),adP=DATA.ads.filter(a=>inR(a.date,W.pStart,W.pEnd));
+  const rqC=DATA.reqs.filter(q=>inR(q.date,W.start,W.end)),rqP=DATA.reqs.filter(q=>inR(q.date,W.pStart,W.pEnd));
+  const stocked=new Set(ordAll.map(o=>o.product));
+  const F=finance(W.start,W.end,ordAll,DATA.ads,DATA.exp),Fp=finance(W.pStart,W.pEnd,ordAll,DATA.ads,DATA.exp);
+  const d1=parseISO(W.start),d2=parseISO(W.end);
+  $("#rangeTxt").textContent=`${d1.getDate()} ${MON[d1.getMonth()]} – ${d2.getDate()} ${MON[d2.getMonth()]} ${d2.getFullYear()+543}`;
+  const R=rev(cur),Rp=rev(prev),N=cur.length,Np=prev.length;
+  const S=sum(adC,"spend"),AR=sum(adC,"revenue"),Sp=sum(adP,"spend"),ARp=sum(adP,"revenue");
+  const miss=rqC.filter(q=>!stocked.has(q.product)).length,missP=rqP.filter(q=>!stocked.has(q.product)).length;
+  const ctx={W,ord,cur,prev,adC,rqC,rqP,stocked,F,Fp,R,Rp,N,S,AR};
+
+  if(view==="overview"){
+    $("#kpis").innerHTML=[
+      ["ยอดขาย"+(channel?` (${esc(channel)})`:""),baht(R),deltaHTML(pctChange(R,Rp))],
+      ["กำไรสุทธิ (ทุกช่องทาง)",baht(F.net),deltaHTML(Fp.net>0?pctChange(F.net,Fp.net):null),F.net<0],
+      ["จำนวนรายการขาย",fmt(N),deltaHTML(pctChange(N,Np))],
+      ["เฉลี่ยต่อรายการ",baht(N?R/N:0),deltaHTML(pctChange(N?R/N:0,Np?Rp/Np:0))],
+      ["ค่าแอด / ROAS",`${baht(S)}`,`<span class="d flat">ROAS ${S?(AR/S).toFixed(2)+"x":"–"} ${Sp?"(ก่อนหน้า "+(ARp/Sp).toFixed(2)+"x)":""}</span>`],
+      ["ถามหาของที่ร้านไม่มี",fmt(miss)+" ครั้ง",deltaHTML(pctChange(miss,missP),true)]
+    ].map(([a,b,c,neg])=>`<div class="kpi"><span class="k">${a}</span><span class="v${neg?" neg":""}">${b}</span>${c}</div>`).join("");
+    renderTrendHeat(ctx);
+    renderInsights(ctx);
+  }
+  if(view==="entry")renderRecent();
+  if(view==="customers")renderSegments(ctx);
+  if(view==="finance")renderFinance(ctx);
+  if(view==="products")renderProducts(ctx);
+  if(view==="ads")renderAds(ctx);
+  fillLists();
+}
+
+function destroyCharts(){Object.values(charts).forEach(c=>c.destroy());charts={}}
+const kfmt=v=>"฿"+(Math.abs(v)>=1000?(v/1000).toFixed(0)+"k":v);
+function baseOpts(extra){const ink=css("--muted"),line=css("--line");const font={family:"IBM Plex Sans Thai",size:11.5};const tick={color:ink,font};
+  return Object.assign({maintainAspectRatio:false,animation:false,interaction:{mode:"index",intersect:false},
+    plugins:{legend:{display:false},tooltip:{callbacks:{label:c=>`${c.dataset.label}: ${baht(c.parsed.y)}`}}},
+    scales:{x:{ticks:{...tick,maxRotation:0,autoSkip:true,maxTicksLimit:10},grid:{display:false}},y:{ticks:{...tick,callback:kfmt},grid:{color:line},beginAtZero:true}}},extra||{})}
+
+function renderTrendHeat({W,cur,adC}){
+  const days=[];for(let d=W.start;d<=W.end;d=addDays(d,1))days.push(d);
+  const weekly=period>45,buckets=[];
+  if(weekly){for(let i=0;i<days.length;i+=7)buckets.push(days.slice(i,i+7))}else days.forEach(d=>buckets.push([d]));
+  const revBy={},spBy={};cur.forEach(o=>revBy[o.date]=(revBy[o.date]||0)+o.qty*o.price);adC.forEach(a=>spBy[a.date]=(spBy[a.date]||0)+(+a.spend||0));
+  const labels=buckets.map(b=>{const d=parseISO(b[0]);return (weekly?"สัปดาห์ ":"")+d.getDate()+" "+MON[d.getMonth()]});
+  const rv=buckets.map(b=>b.reduce((s,d)=>s+(revBy[d]||0),0)),sp=buckets.map(b=>b.reduce((s,d)=>s+(spBy[d]||0),0));
+  destroyCharts();
+  if(typeof Chart!=="undefined"){
+    const o=baseOpts();o.scales.y2={position:"right",ticks:{color:css("--muted"),callback:kfmt},grid:{display:false},beginAtZero:true};
+    charts.t=new Chart($("#trendChart"),{data:{labels,datasets:[
+      {type:"bar",label:"ยอดขาย",data:rv,backgroundColor:css("--red"),borderRadius:3,yAxisID:"y",order:2},
+      {type:"line",label:"ค่าแอด",data:sp,borderColor:css("--teal"),backgroundColor:css("--teal"),pointRadius:0,pointHoverRadius:4,borderWidth:2,tension:.3,yAxisID:"y2",order:1}]},options:o});
+  }
+  const H0=8,H1=22,cols=H1-H0+1,grid=Array.from({length:7},()=>Array(cols).fill(0));
+  cur.forEach(o=>{const h=Math.min(H1,Math.max(H0,+o.hour||12));grid[parseISO(o.date).getDay()][h-H0]+=o.qty*o.price});
+  let mx=0,best=[0,0];grid.forEach((row,d)=>row.forEach((v,h)=>{if(v>mx){mx=v;best=[d,h]}}));
+  let hh=`<span></span>`;for(let h=H0;h<=H1;h++)hh+=`<span class="h">${h}</span>`;
+  [1,2,3,4,5,6,0].forEach(d=>{hh+=`<span class="dl">${DOW[d]}</span>`;grid[d].forEach((v,h)=>{const p=mx?Math.round(v/mx*92):0;hh+=`<span class="c${d===best[0]&&h===best[1]&&mx?" top":""}" style="background:color-mix(in srgb,var(--red) ${p}%,var(--surface-2))" title="${DOW_FULL[d]} ${h+H0}:00 · ${baht(v)}"></span>`})});
+  const heat=$("#heat");heat.style.setProperty("--cols",cols);heat.innerHTML=hh;
+  const dowTot=grid.map(r=>r.reduce((a,b)=>a+b,0)),bestDow=dowTot.indexOf(Math.max(...dowTot));
+  const hourTot=Array(cols).fill(0);grid.forEach(r=>r.forEach((v,h)=>hourTot[h]+=v));
+  const topHours=hourTot.map((v,h)=>[v,h+H0]).sort((a,b)=>b[0]-a[0]).slice(0,2).map(x=>x[1]).sort((a,b)=>a-b);
+  render.peak={bestDow,topHours,has:mx>0};
+  $("#heatNote").innerHTML=mx?`ขายดีสุด <b>${DOW_FULL[best[0]]} ${best[1]+H0}:00–${best[1]+H0+1}:00</b> · วันที่ขายได้มากสุดคือ <b>${DOW_FULL[bestDow]}</b> · ชั่วโมงทองคือ <b>${topHours.map(h=>h+":00").join(" และ ")}</b>`:"ยังไม่มีข้อมูลในช่วงนี้";
+}
+
+function segStats(rows,key){
+  const m={};rows.forEach(o=>{const g=o[key]||"ไม่ระบุ";const x=m[g]||(m[g]={r:0,n:0,q:0,p:{},ch:{},h:{}});x.r+=o.qty*o.price;x.n++;x.q+=o.qty;x.p[o.product]=(x.p[o.product]||0)+o.qty*o.price;x.ch[o.channel||"-"]=(x.ch[o.channel||"-"]||0)+o.qty*o.price;x.h[+o.hour||12]=(x.h[+o.hour||12]||0)+1});return m}
+const SEG_COL=["var(--red)","var(--gold)","var(--teal)","var(--slate)","var(--warn)","var(--good)"];
+const topOf=o=>Object.entries(o).sort((a,b)=>b[1]-a[1]);
+
+function renderSegments({cur,prev,R,rqC,stocked}){
+  document.querySelectorAll("#segBy button").forEach(b=>b.setAttribute("aria-pressed",String(b.dataset.k===segBy)));
+  const m=segStats(cur,segBy),mp=segStats(prev,segBy);
+  const list=topOf(Object.fromEntries(Object.entries(m).map(([k,v])=>[k,v.r]))).map(([k])=>[k,m[k]]);
+  const colOf={};list.forEach(([k],i)=>colOf[k]=SEG_COL[i%SEG_COL.length]);
+  $("#segStack").innerHTML=list.map(([k,x])=>`<span style="width:${R?x.r/R*100:0}%;background:${colOf[k]}" title="${esc(k)}"></span>`).join("");
+  $("#segLegend").innerHTML=list.map(([k,x])=>`<span><i style="background:${colOf[k]}"></i>${esc(k)} ${(R?x.r/R*100:0).toFixed(0)}%</span>`).join("");
+  $("#segBody").innerHTML=list.length?list.map(([k,x])=>`<tr><td><span class="dot" style="background:${colOf[k]};margin-right:8px"></span>${esc(k)}</td><td class="r num">${baht(x.r)}</td><td class="r num">${(x.r/R*100).toFixed(0)}%</td><td class="r num">${fmt(x.n)}</td><td class="r num">${baht(x.r/x.n)}</td><td class="r num">${(x.q/x.n).toFixed(1)}</td><td class="r">${chg(mp[k]?pctChange(x.r,mp[k].r):null)}</td></tr>`).join(""):`<tr><td colspan="7" class="note">ยังไม่มียอดขายในช่วงนี้</td></tr>`;
+  const reqBy={};if(segBy==="customer")rqC.filter(q=>!stocked.has(q.product)).forEach(q=>{const g=q.customer||"ไม่ระบุ";(reqBy[g]=reqBy[g]||{})[q.product]=((reqBy[g]||{})[q.product]||0)+1});
+  $("#segCards").innerHTML=list.map(([k,x])=>{
+    const tp=topOf(x.p).slice(0,3),tc=topOf(x.ch)[0],th=topOf(x.h).slice(0,2).map(h=>h[0]+":00").join(", ");
+    const want=reqBy[k]?topOf(reqBy[k]).slice(0,2).map(([p,n])=>`${esc(p)} (${n})`).join(", "):"";
+    return `<div class="panel segcard"><div class="hd"><h3><span class="dot" style="background:${colOf[k]}"></span>${esc(k)}</h3><span class="num">${baht(x.r)}</span></div>
+      <dl class="facts"><dt>ขายดี</dt><dd>${tp.map(([p,v])=>`${esc(p)} <span class="note">${baht(v)}</span>`).join("<br>")}</dd>
+      ${segBy!=="channel"?`<dt>ช่องทางหลัก</dt><dd>${esc(tc?tc[0]:"-")} <span class="note">${tc?(tc[1]/x.r*100).toFixed(0)+"%":""}</span></dd>`:""}
+      <dt>มาบ่อยช่วง</dt><dd>${th||"-"}</dd>
+      <dt>ซื้อเฉลี่ย</dt><dd>${baht(x.r/x.n)} / รายการ · ${(x.q/x.n).toFixed(1)} ชิ้น</dd>
+      ${want?`<dt>ถามหาของที่ไม่มี</dt><dd>${want}</dd>`:""}</dl></div>`}).join("");
+}
+
+function renderFinance({W,F,Fp}){
+  const days=period;
+  const gm=F.R?F.gross/F.R:margin;const fixed=F.ad+F.opex;const beDay=gm>0?fixed/gm/days:0;
+  $("#finKpis").innerHTML=[
+    ["รายได้",baht(F.R),deltaHTML(pctChange(F.R,Fp.R))],
+    ["ค่าใช้จ่ายรวม",baht(F.cogs+F.ad+F.opex),deltaHTML(pctChange(F.cogs+F.ad+F.opex,Fp.cogs+Fp.ad+Fp.opex),true)],
+    ["กำไรสุทธิ",baht(F.net),`<span class="d ${F.net>=0?"up":"down"}">${F.R?(F.net/F.R*100).toFixed(1)+"% ของรายได้":"–"}</span>`,F.net<0],
+    ["ยอดขายคุ้มทุนต่อวัน",baht(beDay),`<span class="d flat">ตอนนี้ขายได้เฉลี่ย ${baht(F.R/days)}/วัน</span>`]
+  ].map(([a,b,c,neg])=>`<div class="kpi"><span class="k">${a}</span><span class="v${neg?" neg":""}">${b}</span>${c}</div>`).join("");
+  const pc=v=>F.R?(v/F.R*100).toFixed(1)+"%":"–";
+  const allCats=[...new Set([...Object.keys(F.cats),...Object.keys(Fp.cats)])].sort((a,b)=>(F.cats[b]||0)-(F.cats[a]||0));
+  let rows=`<tr class="sub"><td>รายได้จากการขาย</td><td class="r num">${baht(F.R)}</td><td class="r num">${baht(Fp.R)}</td><td class="r num">100%</td></tr>
+    <tr><td class="ind">ต้นทุนสินค้า</td><td class="r num">${baht(-F.cogs)}</td><td class="r num">${baht(-Fp.cogs)}</td><td class="r num">${pc(F.cogs)}</td></tr>
+    <tr class="sub"><td>กำไรขั้นต้น</td><td class="r num">${baht(F.gross)}</td><td class="r num">${baht(Fp.gross)}</td><td class="r num">${pc(F.gross)}</td></tr>
+    <tr><td class="ind">ค่าแอด</td><td class="r num">${baht(-F.ad)}</td><td class="r num">${baht(-Fp.ad)}</td><td class="r num">${pc(F.ad)}</td></tr>`;
+  allCats.forEach(c=>rows+=`<tr><td class="ind">${esc(c)}</td><td class="r num">${baht(-(F.cats[c]||0))}</td><td class="r num">${baht(-(Fp.cats[c]||0))}</td><td class="r num">${pc(F.cats[c]||0)}</td></tr>`);
+  rows+=`<tr class="total"><td>กำไรสุทธิ</td><td class="r num ${F.net<0?"down":""}">${baht(F.net)}</td><td class="r num ${Fp.net<0?"down":""}">${baht(Fp.net)}</td><td class="r num">${pc(F.net)}</td></tr>`;
+  $("#plBody").innerHTML=rows;
+  $("#cogsNote").textContent=costMode==="margin"?`ต้นทุนสินค้าประมาณจากกำไรขั้นต้น ${Math.round(margin*100)}% (ยอดซื้อของเข้าร้านที่บันทึกไว้ ${baht(F.purchase)} ไม่ถูกนับซ้ำ) · เปลี่ยนเป็น “ยอดซื้อของเข้าร้านที่บันทึก” ได้ที่แถบด้านบน`:`ต้นทุนสินค้าใช้ยอดซื้อของเข้าร้านที่บันทึกไว้ในช่วงนี้ ถ้าซื้อของล็อตใหญ่ล่วงหน้า กำไรช่วงนั้นจะดูต่ำกว่าความจริง`;
+  const ex=[["ต้นทุนสินค้า",F.cogs],["ค่าแอด",F.ad],...Object.entries(F.cats)].filter(x=>x[1]>0).sort((a,b)=>b[1]-a[1]);const exT=ex.reduce((s,x)=>s+x[1],0),exMax=ex.length?ex[0][1]:1;
+  $("#expBreak").innerHTML=ex.length?ex.map(([c,v])=>`<div><div class="row"><span>${esc(c)}</span><span class="num">${baht(v)} · ${(v/exT*100).toFixed(0)}%</span></div><div class="stack" style="height:8px"><span style="width:${v/exMax*100}%;background:var(--slate)"></span></div></div>`).join(""):`<p class="note">ยังไม่มีค่าใช้จ่ายในช่วงนี้ บันทึกได้ที่หน้า “บันทึกข้อมูล”</p>`;
+  const endD=parseISO(W.end),ms=[];for(let i=5;i>=0;i--){const d=new Date(endD.getFullYear(),endD.getMonth()-i,1);const a=iso(d),b=iso(new Date(d.getFullYear(),d.getMonth()+1,0));ms.push([MON[d.getMonth()],finance(a,b,DATA.orders,DATA.ads,DATA.exp)])}
+  $("#finMonthNote").textContent=`เดือน ${MON[endD.getMonth()]} นับถึงวันที่ ${endD.getDate()} เท่านั้น`;
+  destroyCharts();
+  if(typeof Chart!=="undefined")charts.f=new Chart($("#finChart"),{data:{labels:ms.map(m=>m[0]),datasets:[
+    {type:"bar",label:"รายได้",data:ms.map(m=>m[1].R),backgroundColor:css("--red"),borderRadius:3,order:2},
+    {type:"bar",label:"ค่าใช้จ่ายรวม",data:ms.map(m=>m[1].cogs+m[1].ad+m[1].opex),backgroundColor:css("--slate"),borderRadius:3,order:2},
+    {type:"line",label:"กำไรสุทธิ",data:ms.map(m=>m[1].net),borderColor:css("--good"),backgroundColor:css("--good"),pointRadius:3,borderWidth:2,tension:.25,order:1}]},options:baseOpts()});
+}
+
+function renderProducts({W,ord,cur,prev,R,rqC,rqP,stocked}){
+  const agg=a=>{const m={};a.forEach(o=>{const x=m[o.product]||(m[o.product]={q:0,r:0,c:{}});x.q+=o.qty;x.r+=o.qty*o.price;x.c[o.customer||"ไม่ระบุ"]=(x.c[o.customer||"ไม่ระบุ"]||0)+o.qty*o.price});return m};
+  const A=agg(cur),Ap=agg(prev),list=Object.entries(A).sort((a,b)=>b[1].r-a[1].r),topR=list.length?list[0][1].r:1;
+  $("#prodBody").innerHTML=list.length?list.map(([n,x],i)=>{const tc=topOf(x.c)[0];
+    return `<tr><td class="num">${i+1}</td><td>${esc(n)}</td><td class="r num">${fmt(x.q)}</td><td class="r num">${baht(x.r)}</td><td><div class="share"><span style="width:${Math.max(3,x.r/topR*100)}%"></span><small class="num">${(R?x.r/R*100:0).toFixed(0)}%</small></div></td><td class="r">${Ap[n]?chg(pctChange(x.r,Ap[n].r)):'<span class="pill mute">ใหม่</span>'}</td><td>${esc(tc?tc[0]:"-")} <span class="note">${tc?(tc[1]/x.r*100).toFixed(0)+"%":""}</span></td></tr>`}).join(""):`<tr><td colspan="7" class="note">ยังไม่มียอดขายในช่วงนี้</td></tr>`;
+  const endD=parseISO(W.end),months=[];for(let i=5;i>=0;i--){const d=new Date(endD.getFullYear(),endD.getMonth()-i,1);months.push(d.getFullYear()+"-"+pad(d.getMonth()+1))}
+  const mRev=months.map(m=>ord.filter(o=>o.date.startsWith(m)).reduce((s,o)=>s+o.qty*o.price,0));
+  $("#monthNote").textContent=`เดือน ${MON[endD.getMonth()]} นับถึงวันที่ ${endD.getDate()} · พ.ย.–ก.พ. เป็นหน้าท่องเที่ยวของแม่สาย`;
+  destroyCharts();
+  if(typeof Chart!=="undefined"){const gold=css("--gold");charts.m=new Chart($("#monthChart"),{type:"bar",data:{labels:months.map(m=>MON[+m.slice(5)-1]),datasets:[{label:"ยอดขาย",data:mRev,backgroundColor:mRev.map((_,i)=>i===5?css("--surface-2"):gold),borderColor:gold,borderWidth:mRev.map((_,i)=>i===5?1.5:0),borderRadius:4}]},options:baseOpts()})}
+  const allCur=DATA.orders.filter(o=>inR(o.date,W.start,W.end)),RA=rev(allCur),byCh={};allCur.forEach(o=>byCh[o.channel||"ไม่ระบุ"]=(byCh[o.channel||"ไม่ระบุ"]||0)+o.qty*o.price);
+  const chList=topOf(byCh),chMax=chList.length?chList[0][1]:1;
+  $("#chan").innerHTML=chList.length?chList.map(([c,v])=>`<div><div class="row"><span>${esc(c)}</span><span class="num">${baht(v)} · ${(v/RA*100).toFixed(0)}%</span></div><div class="stack" style="height:8px"><span style="width:${v/chMax*100}%;background:var(--teal)"></span></div></div>`).join("")+`<p class="note">แสดงทุกช่องทาง ไม่ขึ้นกับตัวกรองช่องทาง</p>`:`<p class="note">ไม่มีข้อมูล</p>`;
+  const dq={},dqp={};rqC.forEach(q=>{const x=dq[q.product]||(dq[q.product]={n:0,s:{},c:{}});x.n++;x.s[q.source||"ไม่ระบุ"]=(x.s[q.source||"ไม่ระบุ"]||0)+1;x.c[q.customer||"ไม่ระบุ"]=(x.c[q.customer||"ไม่ระบุ"]||0)+1});rqP.forEach(q=>dqp[q.product]=(dqp[q.product]||0)+1);
+  const dl=Object.entries(dq).sort((a,b)=>b[1].n-a[1].n);
+  $("#wantBody").innerHTML=dl.length?dl.map(([p,x])=>{const has=stocked.has(p);
+    const st=has?`<span class="pill good">มีขายแล้ว</span>`:(x.n>=dl[0][1].n*.4?`<span class="pill bad">ไม่มีขาย · ควรเอาเข้าร้าน</span>`:`<span class="pill warn">ไม่มีขาย · เฝ้าดู</span>`);
+    return `<tr><td>${esc(p)}</td><td class="r num">${fmt(x.n)}</td><td class="r">${dqp[p]?chg(pctChange(x.n,dqp[p])):'<span class="pill mute">ใหม่</span>'}</td><td class="note">${topOf(x.s).map(([s,n])=>`${esc(s)} ${n}`).join(" · ")}</td><td class="note">${topOf(x.c).map(([s,n])=>`${esc(s)} ${n}`).join(" · ")}</td><td>${st}</td></tr>`}).join(""):`<tr><td colspan="6" class="note">ยังไม่มีบันทึกคำถามในช่วงนี้</td></tr>`;
+}
+
+function adRows(adC){const ac={};adC.forEach(a=>{const x=ac[a.campaign]||(ac[a.campaign]={p:a.platform,s:0,c:0,m:0,o:0,r:0});x.s+=+a.spend||0;x.c+=+a.clicks||0;x.m+=+a.messages||0;x.o+=+a.orders||0;x.r+=+a.revenue||0});return Object.entries(ac).map(([n,x])=>[n,x,x.s?x.r/x.s:0]).sort((a,b)=>b[2]-a[2])}
+function renderAds({adC}){
+  const be=1/margin;$("#beTxt").textContent=`ROAS คุ้มทุน ≈ ${be.toFixed(1)}x (คิดจากกำไรขั้นต้น ${Math.round(margin*100)}%)`;
+  const al=adRows(adC);
+  $("#adsBody").innerHTML=al.length?al.map(([n,x,ro])=>{const st=ro>=be*1.3?`<span class="pill good">กำไรดี · เพิ่มงบ</span>`:ro>=be?`<span class="pill warn">พอคุ้ม · ปรับคอนเทนต์</span>`:`<span class="pill bad">ขาดทุน · หยุดหรือปรับ</span>`;
+    return `<tr><td>${esc(n)}</td><td>${esc(x.p)}</td><td class="r num">${baht(x.s)}</td><td class="r num">${fmt(x.c)}</td><td class="r num">${fmt(x.m)}</td><td class="r num">${x.m?baht(x.s/x.m):"–"}</td><td class="r num">${fmt(x.o)}</td><td class="r num">${baht(x.r)}</td><td class="r num">${ro.toFixed(2)}x</td><td>${st}</td></tr>`}).join(""):`<tr><td colspan="10" class="note">ไม่มีข้อมูลแอดในช่วงนี้</td></tr>`;
+}
+
+function renderInsights({cur,prev,R,F,adC,rqC,stocked}){
+  const ins=[];const be=1/margin;
+  if(F.R){const pct=F.net/F.R*100;ins.push(["money","กำไร",F.net>=0?`กำไรสุทธิช่วงนี้ ${baht(F.net)} (${pct.toFixed(1)}% ของรายได้)`:`ช่วงนี้ขาดทุน ${baht(-F.net)} ต้องขายเพิ่มให้ถึงวันละ ${baht((F.ad+F.opex)/(F.R?F.gross/F.R:margin)/period)} ถึงจะคุ้มทุน`]);
+    const big=topOf(F.cats)[0];if(big)ins.push(["money","ค่าใช้จ่าย",`ค่าใช้จ่ายดำเนินงานก้อนใหญ่สุดคือ <b>${esc(big[0])}</b> ${baht(big[1])} (${(big[1]/F.R*100).toFixed(0)}% ของรายได้)`]);}
+  const A={},Ap={};cur.forEach(o=>A[o.product]=(A[o.product]||0)+o.qty*o.price);prev.forEach(o=>Ap[o.product]=(Ap[o.product]||0)+o.qty*o.price);
+  const list=topOf(A);
+  if(list.length){ins.push(["sell","ขายดี",`<b>${esc(list[0][0])}</b> ทำยอด ${baht(list[0][1])} (${(list[0][1]/R*100).toFixed(0)}%) วางระดับสายตาตรงทางเข้า และอย่าให้ของขาด`]);
+    const rising=list.slice(1).filter(([p])=>Ap[p]>0).map(([p,v])=>[p,(v-Ap[p])/Ap[p]]).sort((a,b)=>b[1]-a[1])[0];
+    if(rising&&rising[1]>.1)ins.push(["sell","กำลังมา",`<b>${esc(rising[0])}</b> ยอดโต ${(rising[1]*100).toFixed(0)}% จากช่วงก่อน เพิ่มสต็อกและจัดเป็นเซ็ตคู่กับสินค้าขายดี`]);}
+  const pk=render.peak;if(pk&&pk.has)ins.push(["time","ช่วงเวลา",`ลูกค้าเยอะสุด${DOW_FULL[pk.bestDow]} ช่วง ${pk.topHours.map(h=>h+":00").join(" และ ")} จัดคนช่วยหน้าร้านและเปิดจุดชิมช่วงนี้ แอดออนไลน์เริ่มยิงก่อนพีค 1–2 ชั่วโมง`]);
+  const seg=segStats(cur,"ctype");const tour=seg["กรุ๊ปทัวร์"];if(tour&&R){ins.push(["sell","กลุ่มลูกค้า",`กรุ๊ปทัวร์ซื้อเฉลี่ย ${baht(tour.r/tour.n)} ต่อรายการ (${(tour.r/R*100).toFixed(0)}% ของยอด) ทำเซ็ตของฝากราคาจบ 199/299 และติดต่อไกด์ทัวร์ประจำ`])}
+  const cn=segStats(cur,"customer")["จีน"];if(cn&&R&&cn.r/R>.12){const t=topOf(cn.p)[0];ins.push(["sell","ลูกค้าจีน",`ลูกค้าจีน ${(cn.r/R*100).toFixed(0)}% ของยอด ชอบ <b>${esc(t[0])}</b> ทำป้ายราคาภาษาจีนและรับ Alipay / WeChat Pay`])}
+  const dq={};rqC.filter(q=>!stocked.has(q.product)).forEach(q=>dq[q.product]=(dq[q.product]||0)+1);const gap=topOf(dq);
+  if(gap.length)ins.push(["want","ลูกค้าถามหา",`ลูกค้าถามหา <b>${gap.slice(0,3).map(([p,n])=>esc(p)+" ("+n+" ครั้ง)").join(", ")}</b> แต่ร้านยังไม่มี ลองสั่งมาขายจำนวนน้อยเพื่อทดสอบ`]);
+  const al=adRows(adC);if(al.length){const g=al[0];if(g[2]>=be)ins.push(["ads","แอด",`<b>${esc(g[0])}</b> ROAS ${g[2].toFixed(1)}x ดีที่สุด ลองเพิ่มงบทีละ 20% แล้วดูว่ายังเกิน ${be.toFixed(1)}x หรือไม่`]);
+    const bad=al.filter(a=>a[2]<be);if(bad.length)ins.push(["ads","แอด",`${bad.map(a=>"<b>"+esc(a[0])+"</b> ("+a[2].toFixed(1)+"x)").join(", ")} ต่ำกว่าจุดคุ้มทุน ใช้เงินไป ${baht(bad.reduce((s,a)=>s+a[1].s,0))} หยุดหรือเปลี่ยนกลุ่มเป้าหมาย`]);}
+  $("#insights").innerHTML=ins.length?ins.map(([t,l,txt])=>`<li><span class="tag ${t}">${l}</span><span>${txt}</span></li>`).join(""):`<li><span class="tag money">ข้อมูล</span><span>ยังมีข้อมูลไม่พอสำหรับสรุปในช่วงนี้</span></li>`;
+}
+
+/* ---------- entry ---------- */
+const FORM_META={
+  sale:{set:"orders",title:"รายการขายล่าสุด",row:o=>[`${o.date.slice(8)}/${o.date.slice(5,7)} ${pad(+o.hour||0)}:00`,`${esc(o.product)} × ${fmt(o.qty)}<br><span class="note">${esc(o.channel)} · ${esc(o.customer)} · ${esc(o.ctype||"")}</span>`,baht(o.qty*o.price)]},
+  exp:{set:"exp",title:"ค่าใช้จ่ายล่าสุด",row:o=>[`${o.date.slice(8)}/${o.date.slice(5,7)}`,`${esc(o.category)}<br><span class="note">${esc(o.note||"")}</span>`,baht(o.amount)]},
+  ad:{set:"ads",title:"ค่าแอดล่าสุด",row:o=>[`${o.date.slice(8)}/${o.date.slice(5,7)}`,`${esc(o.campaign)}<br><span class="note">${esc(o.platform)} · ยอดขาย ${baht(o.revenue||0)}</span>`,baht(o.spend)]},
+  req:{set:"reqs",title:"คำถามล่าสุด",row:o=>[`${o.date.slice(8)}/${o.date.slice(5,7)}`,`${esc(o.product)}<br><span class="note">${esc(o.source)} · ${esc(o.customer||"")}</span>`,""]}
+};
+function renderRecent(){
+  const meta=FORM_META[formType];$("#recentTitle").textContent=meta.title;
+  const rows=LIVE[meta.set].slice().sort((a,b)=>(b.date+(b.ts||"")).localeCompare(a.date+(a.ts||""))).slice(0,15);
+  $("#recentBody").innerHTML=rows.length?rows.map(o=>{const [a,b,c]=meta.row(o);return `<tr><td class="num note">${a}</td><td>${b}</td><td class="r num">${c}</td><td class="r">${canWrite?`<button class="btn tiny danger" type="button" data-del="${esc(o.id)}" data-set="${meta.set}" data-date="${esc(o.date)}">ลบ</button>`:""}</td></tr>`}).join(""):`<tr><td class="note">${dbState==="none"?"เปิดหน้านี้ใน claude.ai เพื่อบันทึกข้อมูล":"ยังไม่มีรายการ บันทึกรายการแรกจากฟอร์มด้านซ้าย"}</td></tr>`;
+}
+function fillLists(){
+  const prods=[...new Set([...LIVE.orders,...(liveCount()?[]:SAMPLE.orders)].map(o=>o.product))].sort();
+  const camps=[...new Set([...LIVE.ads,...(liveCount()?[]:SAMPLE.ads)].map(o=>o.campaign))].sort();
+  const reqs=[...new Set([...LIVE.reqs,...SAMPLE.reqs].map(o=>o.product))].sort();
+  const set=(id,arr)=>{const el=$(id);const h=arr.map(v=>`<option value="${esc(v)}"></option>`).join("");if(el.innerHTML!==h)el.innerHTML=h};
+  set("#dl-products",prods);set("#dl-campaigns",camps);set("#dl-reqs",reqs);
+}
+function docIdFor(set,date){return set==="exp"?date.slice(0,7):date}
+async function writeItems(set,docId,items){
+  const ref=DB.collection(COLS[set]).doc(docId);
+  for(let attempt=0;attempt<3;attempt++){
+    try{await ref.update({items});return}
+    catch(e){
+      if(e&&e.code==="invalid_argument"){const snap=await ref.get();if(!snap.exists){await ref.set({items});return}throw e}
+      if(e&&(e.code==="unavailable"||e.code==="resource_exhausted")){await sleep(600+Math.random()*900*(attempt+1));continue}
+      throw e;
+    }
+  }
+  throw {code:"unavailable",message:"retry failed"};
+}
+function errText(e){const c=e&&e.code;return c==="quota_exceeded"?"พื้นที่เก็บข้อมูลเต็ม ลบรายการเก่าที่ไม่ใช้ก่อน":c==="invalid_argument"?"บันทึกไม่ได้ บัญชีนี้มีสิทธิ์ดูอย่างเดียว":c==="revoked"||c==="not_granted"?"สิทธิ์เข้าถึงข้อมูลถูกยกเลิก":"บันทึกไม่สำเร็จ ลองใหม่อีกครั้ง"}
+async function addOne(set,item,msgEl,form){
+  if(!DB||!canWrite){msgEl.className="msg err";msgEl.textContent="บันทึกไม่ได้ในมุมมองนี้";return false}
+  const id=uid();item.ts=new Date().toISOString();
+  const btn=form.querySelector("button[type=submit]");btn.disabled=true;msgEl.className="msg";msgEl.textContent="กำลังบันทึก…";
+  try{await writeItems(set,docIdFor(set,item.date),{[id]:item});msgEl.className="msg ok";msgEl.textContent="บันทึกแล้ว";setTimeout(()=>{if(msgEl.textContent==="บันทึกแล้ว")msgEl.textContent=""},2500);return true}
+  catch(e){msgEl.className="msg err";msgEl.textContent=errText(e);return false}
+  finally{btn.disabled=false}
+}
+function today(){return iso(new Date())}
+function nowTime(){const d=new Date();return pad(d.getHours())+":"+pad(d.getMinutes())}
+function initForms(){
+  ["#s-date","#e-date","#a-date","#r-date"].forEach(id=>$(id).value=today());$("#s-time").value=nowTime();
+  $("#e-cat").innerHTML=EXP_CATS.map(c=>`<option>${c}</option>`).join("");
+  const lastPrice=()=>{const p=$("#s-product").value.trim();const all=[...LIVE.orders,...(liveCount()?[]:SAMPLE.orders)].filter(o=>o.product===p);if(all.length){const l=all.reduce((a,b)=>(a.date+(a.ts||""))>(b.date+(b.ts||""))?a:b);$("#s-price").value=l.price;updTotal()}};
+  const updTotal=()=>{$("#s-total").textContent=baht((+$("#s-qty").value||0)*(+$("#s-price").value||0))};
+  $("#s-product").addEventListener("change",lastPrice);$("#s-qty").addEventListener("input",updTotal);$("#s-price").addEventListener("input",updTotal);
+  $("#f-sale").addEventListener("submit",async e=>{e.preventDefault();
+    const it={date:$("#s-date").value,hour:parseInt($("#s-time").value,10)||12,product:$("#s-product").value.trim(),qty:Math.max(1,+$("#s-qty").value||1),price:Math.max(0,+$("#s-price").value||0),channel:$("#s-channel").value,customer:$("#s-customer").value,ctype:$("#s-ctype").value};
+    if(!it.product||!it.date)return;
+    if(await addOne("orders",it,$("#m-sale"),e.target)){$("#s-product").value="";$("#s-qty").value=1;$("#s-price").value="";$("#s-time").value=nowTime();updTotal();$("#s-product").focus()}});
+  $("#f-exp").addEventListener("submit",async e=>{e.preventDefault();
+    const it={date:$("#e-date").value,category:$("#e-cat").value,amount:Math.max(0,+$("#e-amount").value||0),note:$("#e-note").value.trim()};
+    if(await addOne("exp",it,$("#m-exp"),e.target)){$("#e-amount").value="";$("#e-note").value=""}});
+  $("#f-ad").addEventListener("submit",async e=>{e.preventDefault();
+    const n=id=>Math.max(0,+$(id).value||0);
+    const it={date:$("#a-date").value,platform:$("#a-platform").value,campaign:$("#a-campaign").value.trim(),spend:n("#a-spend"),clicks:n("#a-clicks"),messages:n("#a-messages"),orders:n("#a-orders"),revenue:n("#a-revenue")};
+    if(!it.campaign)return;
+    if(await addOne("ads",it,$("#m-ad"),e.target))["#a-spend","#a-clicks","#a-messages","#a-orders","#a-revenue"].forEach(id=>$(id).value="")});
+  $("#f-req").addEventListener("submit",async e=>{e.preventDefault();
+    const it={date:$("#r-date").value,product:$("#r-product").value.trim(),source:$("#r-source").value,customer:$("#r-customer").value};
+    if(!it.product)return;
+    if(await addOne("reqs",it,$("#m-req"),e.target)){$("#r-product").value="";$("#r-product").focus()}});
+  document.querySelectorAll("#formSeg button").forEach(b=>b.addEventListener("click",()=>{formType=b.dataset.f;
+    document.querySelectorAll("#formSeg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));
+    ["sale","exp","ad","req"].forEach(f=>$("#f-"+f).hidden=f!==formType);renderRecent()}));
+  $("#recentBody").addEventListener("click",async e=>{
+    const b=e.target.closest("[data-del]");if(!b||!DB)return;
+    if(b.dataset.armed!=="1"){b.dataset.armed="1";b.textContent="ยืนยันลบ";setTimeout(()=>{if(b.isConnected){b.dataset.armed="";b.textContent="ลบ"}},3000);return}
+    b.disabled=true;
+    try{await writeItems(b.dataset.set,docIdFor(b.dataset.set,b.dataset.date),{[b.dataset.del]:null})}catch(err){b.disabled=false;b.textContent=errText(err)}
+  });
+}
+function setWritable(){
+  document.querySelectorAll("form.f input,form.f select,form.f button").forEach(el=>el.disabled=!canWrite);
+  $("#entryHint").textContent=dbState==="none"?"ต้องเปิดหน้านี้ใน claude.ai และลงชื่อเข้าใช้ จึงจะบันทึกได้":(canWrite?"บันทึกแล้วตัวเลขทุกหน้าอัปเดตทันที ทุกคนที่เปิดหน้านี้เห็นข้อมูลชุดเดียวกัน":"บัญชีนี้ดูได้อย่างเดียว ให้เจ้าของแชร์สิทธิ์ Contributor ขึ้นไปเพื่อบันทึก");
+  document.querySelectorAll(".imp input[type=file]").forEach(el=>el.disabled=!canWrite);
+}
+
+/* ---------- CSV import ---------- */
+const IMP=[
+ {set:"orders",title:"ยอดขาย",desc:"จาก POS, Shopee/TikTok Shop หรือสมุดจดที่พิมพ์ลงชีต หนึ่งแถวต่อหนึ่งรายการ",head:"date,time,product,qty,price,channel,customer,ctype",ex:"2026-11-08,10:35,ข้าวเกรียบกุ้ง,2,60,หน้าร้าน,จีน,กรุ๊ปทัวร์",need:["date","product","qty","price"],
+  map:r=>{const d=normDate(r.date);if(!d||!r.product)return null;return {date:d,hour:parseInt((r.time||"12").split(":")[0],10)||12,product:r.product.trim(),qty:num(r.qty)||1,price:num(r.price),channel:(r.channel||"หน้าร้าน").trim(),customer:(r.customer||"ไม่ระบุ").trim(),ctype:(r.ctype||"ขาจร").trim()}}},
+ {set:"exp",title:"ค่าใช้จ่าย",desc:"หมวด: "+EXP_CATS.join(", "),head:"date,category,amount,note",ex:"2026-11-01,ค่าเช่าร้าน,15000,ค่าเช่า พ.ย.",need:["date","category","amount"],
+  map:r=>{const d=normDate(r.date);if(!d||!r.category)return null;return {date:d,category:r.category.trim(),amount:num(r.amount),note:(r.note||"").trim()}}},
+ {set:"ads",title:"แอด",desc:"Facebook Ads Manager / TikTok Ads: รายงานแยกรายวัน ส่งออก CSV แล้วเปลี่ยนชื่อคอลัมน์ให้ตรง",head:"date,campaign,platform,spend,clicks,messages,orders,revenue",ex:"2026-11-08,FB กระเช้าปีใหม่,Facebook,450,98,15,4,3280",need:["date","campaign","spend"],
+  map:r=>{const d=normDate(r.date);if(!d||!r.campaign)return null;return {date:d,campaign:r.campaign.trim(),platform:(r.platform||"-").trim(),spend:num(r.spend),clicks:num(r.clicks),messages:num(r.messages),orders:num(r.orders),revenue:num(r.revenue)}}},
+ {set:"reqs",title:"ลูกค้าถามหา",desc:"ทุกครั้งที่ลูกค้าถามหาสินค้า จดหนึ่งแถว โดยเฉพาะของที่ร้านไม่มี",head:"date,product,source,customer",ex:"2026-11-08,ชาอู่หลงดอยแม่สลอง,LINE OA,จีน",need:["date","product"],
+  map:r=>{const d=normDate(r.date);if(!d||!r.product)return null;return {date:d,product:r.product.trim(),source:(r.source||"ไม่ระบุ").trim(),customer:(r.customer||"ไม่ระบุ").trim()}}}];
+function parseCSV(text){text=text.replace(/^﻿/,"");const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===","){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}
+  if(f!==""||row.length){row.push(f);rows.push(row)}return rows.filter(r=>r.some(x=>x.trim()!==""))}
+function normDate(s){s=(s||"").trim();let m=s.match(/^(\d{4})-(\d{1,2})-(\d{1,2})/);if(m){let y=+m[1];if(y>2400)y-=543;return y+"-"+pad(+m[2])+"-"+pad(+m[3])}
+  m=s.match(/^(\d{1,2})\/(\d{1,2})\/(\d{4})/);if(m){let y=+m[3];if(y>2400)y-=543;return y+"-"+pad(+m[2])+"-"+pad(+m[1])}return null}
+const num=s=>+(String(s||"").replace(/[^\d.\-]/g,""))||0;
+function initImport(){
+  $("#impGrid").innerHTML=IMP.map((s,i)=>`<div class="panel"><h3>${s.title}</h3><p class="small">${esc(s.desc)}</p><code id="tpl${i}">${esc(s.head)}</code><p class="small">ตัวอย่าง: ${esc(s.ex)}</p>
+    <div style="display:flex;gap:8px;flex-wrap:wrap"><label class="file" for="imp${i}">เลือกไฟล์${s.title}<input id="imp${i}" type="file" accept=".csv,text/csv" data-i="${i}"></label><button class="btn" type="button" data-copy="tpl${i}">คัดลอกหัวตาราง</button></div><p class="msg" id="impm${i}"></p></div>`).join("");
+  document.querySelectorAll("#impGrid input[type=file]").forEach(inp=>inp.addEventListener("change",e=>{
+    const s=IMP[+inp.dataset.i],msg=$("#impm"+inp.dataset.i),file=e.target.files[0];if(!file)return;
+    if(!DB||!canWrite){msg.className="msg err";msg.textContent="นำเข้าไม่ได้ในมุมมองนี้";return}
+    const fr=new FileReader();
+    fr.onload=async()=>{
+      const rows=parseCSV(fr.result);if(rows.length<2){msg.className="msg err";msg.textContent="ไฟล์ว่าง หรือมีแค่หัวตาราง";return}
+      const head=rows[0].map(h=>h.trim().toLowerCase()),miss=s.need.filter(n=>!head.includes(n));
+      if(miss.length){msg.className="msg err";msg.textContent="ไม่พบคอลัมน์: "+miss.join(", ")+" · ตรวจหัวตารางให้ตรงกับตัวอย่าง";return}
+      let bad=0;const groups={};const ts=new Date().toISOString();
+      rows.slice(1).forEach(r=>{const o={};head.forEach((h,i)=>o[h]=r[i]);const m=s.map(o);if(!m){bad++;return}m.ts=ts;const k=docIdFor(s.set,m.date);(groups[k]=groups[k]||{})[uid()+Math.random().toString(36).slice(2,5)]=m});
+      const keys=Object.keys(groups);if(!keys.length){msg.className="msg err";msg.textContent="อ่านแถวไม่ได้เลย · วันที่ต้องเป็น 2026-11-08 หรือ 08/11/2026";return}
+      inp.disabled=true;let done=0,total=rows.length-1-bad;
+      try{for(const k of keys){await writeItems(s.set,k,groups[k]);done+=Object.keys(groups[k]).length;msg.className="msg";msg.textContent=`กำลังนำเข้า ${fmt(done)} / ${fmt(total)} แถว…`;await sleep(120)}
+        msg.className="msg ok";msg.textContent=`นำเข้าแล้ว ${fmt(done)} แถว`+(bad?` · ข้าม ${bad} แถวที่วันที่หรือชื่อว่าง`:"");}
+      catch(err){msg.className="msg err";msg.textContent=`${errText(err)} (นำเข้าได้ ${fmt(done)} แถวก่อนหยุด)`}
+      finally{inp.disabled=!canWrite;inp.value=""}
+    };fr.readAsText(file,"utf-8");
+  }));
+  document.querySelectorAll("[data-copy]").forEach(b=>b.addEventListener("click",()=>{
+    const el=document.getElementById(b.dataset.copy),txt=el.textContent,orig="คัดลอกหัวตาราง";
+    const sel=()=>{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="กด Ctrl+C";setTimeout(()=>b.textContent=orig,1800)};
+    try{navigator.clipboard.writeText(txt).then(()=>{b.textContent="คัดลอกแล้ว";setTimeout(()=>b.textContent=orig,1400)},sel)}catch(e){sel()}}));
+}
+
+/* ---------- routing + controls ---------- */
+const VIEWS=["overview","entry","customers","finance","products","ads","import"];
+function route(){const h=(location.hash||"").slice(1);view=VIEWS.includes(h)?h:"overview";
+  VIEWS.forEach(v=>$("#v-"+v).hidden=v!==view);
+  document.querySelectorAll(".tabs a").forEach(a=>a.setAttribute("aria-current",a.getAttribute("href")==="#"+view?"page":"false"));
+  render()}
+window.addEventListener("hashchange",route);
+function fillChannels(){const s=$("#chanSel"),ch=[...new Set(DATA.orders.map(o=>o.channel).filter(Boolean))].sort();
+  if(channel&&!ch.includes(channel))channel="";const h=`<option value="">ทั้งหมด</option>`+ch.map(c=>`<option${c===channel?" selected":""}>${esc(c)}</option>`).join("");if(s.innerHTML!==h)s.innerHTML=h}
+document.querySelectorAll("#periodSeg button").forEach(b=>{b.setAttribute("aria-pressed",String(+b.dataset.d===period));
+  b.addEventListener("click",()=>{period=+b.dataset.d;document.querySelectorAll("#periodSeg button").forEach(x=>x.setAttribute("aria-pressed",String(x===b)));saveUI();render()})});
+$("#chanSel").addEventListener("change",e=>{channel=e.target.value;saveUI();render()});
+$("#marginIn").value=Math.round(margin*100);
+$("#marginIn").addEventListener("change",e=>{const v=Math.min(90,Math.max(5,+e.target.value||30));e.target.value=v;margin=v/100;saveUI();render()});
+$("#costSel").value=costMode;$("#costSel").addEventListener("change",e=>{costMode=e.target.value;saveUI();render()});
+document.querySelectorAll("#segBy button").forEach(b=>b.addEventListener("click",()=>{segBy=b.dataset.k;saveUI();render()}));
+$("#sampleToggle").addEventListener("click",()=>{forceSample=!forceSample;fillChannels();render()});
+try{matchMedia("(prefers-color-scheme: dark)").addEventListener("change",()=>render())}catch(e){}
+new MutationObserver(()=>render()).observe(document.documentElement,{attributes:true,attributeFilter:["data-theme"]});
+
+/* ---------- boot ---------- */
+initForms();initImport();
+canWrite=false;setWritable();fillChannels();route();
+
+let pending=4,loadTimer=setTimeout(()=>{if(pending>0){dbState="slow";render()}},10000);
+let renderQueued=false;const queueRender=()=>{if(renderQueued)return;renderQueued=true;requestAnimationFrame(()=>{renderQueued=false;fillChannels();render()})};
+(async()=>{
+  const C=window.claude;
+  const db=C&&C.use?await C.use("db").catch(()=>null):null;
+  if(!db){clearTimeout(loadTimer);dbState="none";canWrite=false;setWritable();render();return}
+  DB=db;
+  let user=null;try{user=await C.use("user")}catch(e){}
+  try{const w=user&&user.can?await user.can("data.write"):null;canWrite=w!==false}catch(e){canWrite=true}
+  setWritable();
+  const seen={orders:false,ads:false,reqs:false,exp:false};
+  Object.entries(COLS).forEach(([set,col])=>{
+    db.collection(col).onSnapshot(snap=>{
+      const out=[];snap.docs.forEach(d=>{const body=d.data()||{};const items=body.items||{};
+        Object.entries(items).forEach(([id,it])=>{if(!it||typeof it!=="object")return;const date=it.date||(set==="exp"?d.id+"-01":d.id);out.push(Object.assign({},it,{id,date,qty:+it.qty||0,price:+it.price||0}))})});
+      if(set!=="orders")out.forEach(o=>{delete o.qty;delete o.price});
+      LIVE[set]=out;
+      if(!snap.metadata.fromCache&&!seen[set]){seen[set]=true;pending--;if(pending<=0){clearTimeout(loadTimer);if(dbState!=="ready"){dbState="ready"}}}
+      if(dbState==="loading"&&pending<=0)dbState="ready";
+      queueRender();
+    },err=>{if(!seen[set]){seen[set]=true;pending--}if(err&&(err.code==="revoked"||err.code==="not_granted")){canWrite=false;setWritable()}dbState=pending<=0?"ready":dbState;queueRender()});
+  });
+})();
+})();
+</script>
