@@ -23,6 +23,7 @@
   --good:#6BC070; --warn:#F0A43A; --bad:#F06560; color-scheme:dark; }
 
 *{box-sizing:border-box}
+[hidden]{display:none!important}
 body{background:var(--bg);color:var(--ink);font-family:var(--f-body);font-size:14.5px;line-height:1.55}
 body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--surface)}
 .wrap{max-width:1240px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
@@ -46,7 +47,7 @@ h1,h2,h3{font-family:var(--f-display);text-wrap:balance;margin:0;font-weight:600
 .filters label{font-size:12.5px;color:var(--muted);display:flex;gap:6px;align-items:center}
 select,input{font:inherit;font-size:13.5px;color:var(--ink);background:var(--surface-2);border:1px solid var(--line);border-radius:8px;padding:6px 8px;min-width:0}
 input[type=number].sm{width:64px}
-.seg{display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-wrap:wrap}
+.seg{justify-self:start;display:inline-flex;border:1px solid var(--line);border-radius:9px;overflow:hidden;flex-wrap:wrap}
 .seg button{font:inherit;font-size:13px;border:0;background:transparent;color:var(--ink);padding:5px 11px;cursor:pointer}
 .seg button+button{border-left:1px solid var(--line)}
 .seg button[aria-pressed="true"]{background:var(--ink);color:var(--surface)}
@@ -143,6 +144,16 @@ form.f .wide{grid-column:1/-1}
 .imp code{font-family:var(--f-num);font-size:12px;background:var(--surface-2);border:1px solid var(--line);border-radius:6px;padding:6px 8px;display:block;overflow-x:auto;white-space:nowrap}
 .file{display:inline-flex;align-items:center;gap:8px;font-size:13px;border:1px dashed var(--line);border-radius:8px;padding:8px 10px;cursor:pointer;background:var(--surface-2)}
 .file input{position:absolute;opacity:0;width:1px;height:1px}
+.lv{display:grid;gap:12px}
+.steps{margin:0;padding-left:22px;display:grid;gap:4px;font-size:13.5px}
+#lvPreview{display:grid;gap:12px}
+.lvsum{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:1px;background:var(--line);border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.lvsum div{background:var(--surface-2);padding:10px 12px;display:grid;gap:2px}
+.lvsum span{font-size:12px;color:var(--muted)} .lvsum b{font-family:var(--f-num);font-weight:500;font-size:16px}
+details summary{cursor:pointer;font-size:13.5px;padding:4px 0}
+.lvmap{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:10px 12px;margin:10px 0}
+.lvmap label{display:grid;gap:4px;font-size:12.5px;color:var(--muted)}
+.lvmap label.req{color:var(--ink)}
 .banner{border:1px solid var(--line);background:var(--surface);border-radius:10px;padding:10px 14px;font-size:13.5px;display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important}}
 </style>
@@ -366,7 +377,40 @@ form.f .wide{grid-column:1/-1}
   <!-- IMPORT -->
   <div class="view" id="v-import" hidden>
     <section aria-labelledby="h-imp">
-      <div class="sec-h"><h2 id="h-imp">นำเข้าไฟล์ CSV</h2><p>บันทึกจาก Excel/Google Sheets เป็น .csv (UTF-8) · ข้อมูลจะถูกเพิ่มต่อจากที่มีอยู่</p></div>
+      <div class="sec-h"><h2 id="h-lv">ยอดขายจาก Loyverse POS</h2><p>นำเข้าซ้ำไฟล์เดิมหรือช่วงวันที่ทับกันได้ ใบเสร็จเดิมจะไม่ถูกนับซ้ำ</p></div>
+      <div class="panel lv">
+        <ol class="steps">
+          <li>เปิด Loyverse Back Office บนคอมพิวเตอร์ (r.loyverse.com) → <b>รายงาน</b> → <b>ใบเสร็จ</b></li>
+          <li>เลือกช่วงวันที่ ร้าน “ทั้งหมด” พนักงาน “ทั้งหมด”</li>
+          <li>กด <b>ส่งออก</b> แล้วเลือก <b>ใบเสร็จตามสินค้า</b> (Receipts by item) จะได้ไฟล์ .csv</li>
+          <li>เลือกไฟล์นั้นด้านล่าง ตรวจตัวอย่าง แล้วกดนำเข้า</li>
+        </ol>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;align-items:center">
+          <label class="file" for="lvFile">เลือกไฟล์ CSV จาก Loyverse<input id="lvFile" type="file" accept=".csv,text/csv"></label>
+          <span class="note" id="lvFileName"></span>
+        </div>
+        <p class="msg" id="lvMsg"></p>
+        <div id="lvPreview" hidden>
+          <div class="lvsum" id="lvSum"></div>
+          <details id="lvMapBox">
+            <summary>ตั้งค่าคอลัมน์และค่าเริ่มต้น <span class="note" id="lvMapNote"></span></summary>
+            <div class="lvmap" id="lvMap"></div>
+            <div class="lvmap">
+              <label>รูปแบบวันที่<select id="lvOrder"><option value="dmy">วัน/เดือน/ปี</option><option value="mdy">เดือน/วัน/ปี</option></select></label>
+              <label>ช่องทางถ้าไม่ระบุ<select id="lvChan"><option>หน้าร้าน</option><option>Facebook</option><option>LINE OA</option><option>TikTok Shop</option><option>Shopee</option></select></label>
+              <label>สัญชาติถ้าไม่ระบุ<select id="lvCust"><option>ไม่ระบุ</option><option>ไทย</option><option>จีน</option><option>เมียนมา</option><option>ลาว</option></select></label>
+              <label>ประเภทลูกค้าถ้าไม่ระบุ<select id="lvType"><option>ขาจร</option><option>ลูกค้าประจำ</option><option>กรุ๊ปทัวร์</option><option>ขายส่ง</option></select></label>
+            </div>
+            <p class="small">เคล็ดลับ: ใน Loyverse ตั้ง “ตัวเลือกการทานอาหาร” (Dining options) เป็น ไทย / จีน / เมียนมา / กรุ๊ปทัวร์ / ขายส่ง ให้พนักงานกดตอนคิดเงิน ระบบนี้จะอ่านแล้วแยกกลุ่มลูกค้าให้อัตโนมัติ ลูกค้าที่มีชื่อในใบเสร็จนับเป็นลูกค้าประจำ</p>
+          </details>
+          <div class="scroll"><table><thead><tr><th>วันที่</th><th>เวลา</th><th>สินค้า</th><th class="r">จำนวน</th><th class="r">ยอด</th><th>ลูกค้า</th><th>ประเภท</th><th>ช่องทาง</th></tr></thead><tbody id="lvRows"></tbody></table></div>
+          <div class="actions" style="display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-top:10px">
+            <button class="btn primary" type="button" id="lvGo">นำเข้า</button>
+            <button class="btn" type="button" id="lvCancel">ยกเลิก</button>
+          </div>
+        </div>
+      </div>
+      <div class="sec-h" style="margin-top:12px"><h2 id="h-imp">นำเข้าไฟล์ CSV อื่นๆ</h2><p>บันทึกจาก Excel/Google Sheets เป็น .csv (UTF-8) · ข้อมูลจะถูกเพิ่มต่อจากที่มีอยู่</p></div>
       <div class="imp" id="impGrid"></div>
     </section>
   </div>
@@ -441,7 +485,7 @@ function genSample(){
     }
     CAMPAIGNS.forEach(c=>{
       if(i>c.from)return;
-      const spend=Math.round(c.budget*(.85+.3*r())),clicks=Math.round(spend/c.cpc*(.85+.3*r()));
+      const spend=Math.round(c.budget*.55*(.85+.3*r())),clicks=Math.round(spend/c.cpc*(.85+.3*r()));
       const messages=Math.round(clicks*c.msg*(.8+.4*r())),revenue=Math.round(spend*c.roas*(.6+.8*r()));
       ads.push({id:"a"+i+c.from,date:ds,campaign:c.name,platform:c.platform,spend,clicks,messages,orders:Math.round(revenue/c.aov),revenue});
     });
@@ -453,7 +497,7 @@ function genSample(){
       exp.push({id:"x2"+i,date:ds,category:"ผ่อนค่าตกแต่งร้าน",amount:9000,note:"ผ่อนงานตกแต่ง"});
     }
     if(d.getDate()===28){
-      exp.push({id:"x3"+i,date:ds,category:"เงินเดือน/ค่าแรง",amount:26000,note:"พนักงาน 2 คน"});
+      exp.push({id:"x3"+i,date:ds,category:"เงินเดือน/ค่าแรง",amount:18000,note:"พนักงานประจำ 1 คน + รายวันช่วงพีค"});
       exp.push({id:"x4"+i,date:ds,category:"ค่าน้ำ-ค่าไฟ",amount:Math.round(3800+r()*1400),note:"ค่าไฟ+น้ำ"});
       exp.push({id:"x5"+i,date:ds,category:"ค่าธรรมเนียมแพลตฟอร์ม",amount:Math.round(1800+r()*900),note:"TikTok Shop / ค่าโอน"});
     }
@@ -534,7 +578,7 @@ function render(){
   if(view==="overview"){
     $("#kpis").innerHTML=[
       ["ยอดขาย"+(channel?` (${esc(channel)})`:""),baht(R),deltaHTML(pctChange(R,Rp))],
-      ["กำไรสุทธิ (ทุกช่องทาง)",baht(F.net),deltaHTML(Fp.net>0?pctChange(F.net,Fp.net):null),F.net<0],
+      ["กำไรสุทธิ (ทุกช่องทาง)",baht(F.net),`<span class="d flat">ช่วงก่อน ${baht(Fp.net)}</span>`,F.net<0],
       ["จำนวนรายการขาย",fmt(N),deltaHTML(pctChange(N,Np))],
       ["เฉลี่ยต่อรายการ",baht(N?R/N:0),deltaHTML(pctChange(N?R/N:0,Np?Rp/Np:0))],
       ["ค่าแอด / ROAS",`${baht(S)}`,`<span class="d flat">ROAS ${S?(AR/S).toFixed(2)+"x":"–"} ${Sp?"(ก่อนหน้า "+(ARp/Sp).toFixed(2)+"x)":""}</span>`],
@@ -812,6 +856,134 @@ function initImport(){
     const el=document.getElementById(b.dataset.copy),txt=el.textContent,orig="คัดลอกหัวตาราง";
     const sel=()=>{const r=document.createRange();r.selectNodeContents(el);const s=getSelection();s.removeAllRanges();s.addRange(r);b.textContent="กด Ctrl+C";setTimeout(()=>b.textContent=orig,1800)};
     try{navigator.clipboard.writeText(txt).then(()=>{b.textContent="คัดลอกแล้ว";setTimeout(()=>b.textContent=orig,1400)},sel)}catch(e){sel()}}));
+}
+
+/* ---------- Loyverse import ---------- */
+const LV_FIELDS=[
+ {k:"date",label:"วันที่ / เวลา",req:true,al:["date","date/time","วันที่","วันที่และเวลา","วัน/เวลา"]},
+ {k:"time",label:"เวลา (ถ้าแยกคอลัมน์)",al:["time","เวลา"]},
+ {k:"receipt",label:"เลขที่ใบเสร็จ",al:["receipt number","receipt #","receipt no","receipt","หมายเลขใบเสร็จ","เลขที่ใบเสร็จ","ใบเสร็จ"]},
+ {k:"rtype",label:"ประเภทใบเสร็จ (ขาย/คืนเงิน)",al:["receipt type","ประเภทใบเสร็จ","type","ประเภท"]},
+ {k:"item",label:"สินค้า",al:["item","item name","สินค้า","ชื่อสินค้า","รายการ"]},
+ {k:"variant",label:"ตัวเลือกสินค้า",al:["variant","ตัวเลือก","ตัวแปร","รูปแบบสินค้า"]},
+ {k:"qty",label:"จำนวน",al:["quantity","qty","items sold","จำนวน","จำนวนที่ขาย"]},
+ {k:"amount",label:"ยอดขาย (บาท)",req:true,al:["net sales","ยอดขายสุทธิ","total collected","ยอดที่เก็บได้","gross sales","ยอดขายรวม","ยอดขาย","total","ยอดรวม","amount"]},
+ {k:"customer",label:"ชื่อลูกค้า",al:["customer name","customer","ชื่อลูกค้า","ลูกค้า"]},
+ {k:"dining",label:"ตัวเลือกการทานอาหาร / แท็ก",al:["dining option","dining options","ตัวเลือกการทานอาหาร","ตัวเลือกการรับประทานอาหาร","การทานอาหาร"]},
+ {k:"store",label:"ร้าน / POS",al:["store","pos","ร้านค้า","ร้าน","จุดขาย"]},
+ {k:"payment",label:"วิธีชำระเงิน",al:["payment type","payment","ประเภทการชำระเงิน","การชำระเงิน","วิธีชำระเงิน"]},
+ {k:"status",label:"สถานะ",al:["status","สถานะ"]},
+ {k:"comment",label:"หมายเหตุ",al:["comment","description","หมายเหตุ","คำอธิบาย","ความคิดเห็น"]}
+];
+const MON_EN=["jan","feb","mar","apr","may","jun","jul","aug","sep","oct","nov","dec"];
+const MON_TH=["ม.ค.","ก.พ.","มี.ค.","เม.ย.","พ.ค.","มิ.ย.","ก.ค.","ส.ค.","ก.ย.","ต.ค.","พ.ย.","ธ.ค."];
+let LV=null;
+function parseDelim(text){
+  text=text.replace(/^﻿/,"");const first=text.split(/\r?\n/,1)[0]||"";
+  const d=[",",";","\t"].map(c=>[c,first.split(c).length]).sort((a,b)=>b[1]-a[1])[0][0];
+  const rows=[];let row=[],f="",q=false;
+  for(let i=0;i<text.length;i++){const c=text[i];
+    if(q){if(c==='"'){if(text[i+1]==='"'){f+='"';i++}else q=false}else f+=c}
+    else if(c==='"')q=true;else if(c===d){row.push(f);f=""}
+    else if(c==="\n"||c==="\r"){if(c==="\r"&&text[i+1]==="\n")i++;row.push(f);rows.push(row);row=[];f=""}else f+=c}
+  if(f!==""||row.length){row.push(f);rows.push(row)}
+  return rows.filter(r=>r.some(x=>x.trim()!==""));
+}
+function guessMap(head){
+  const H=head.map(h=>h.trim().toLowerCase()),used=new Set(),map={};
+  LV_FIELDS.forEach(f=>{for(const a of f.al){const i=H.indexOf(a);if(i>=0&&!used.has(i)){map[f.k]=i;used.add(i);break}}});
+  LV_FIELDS.forEach(f=>{if(map[f.k]!==undefined)return;for(const a of f.al){if(a.length<3)continue;const i=H.findIndex((h,j)=>!used.has(j)&&h.includes(a));if(i>=0){map[f.k]=i;used.add(i);break}}});
+  return map;
+}
+function yearFix(y){y=+y;if(y<100){const ad=2000+y;y=ad>new Date().getFullYear()+1?2500+y-543:ad}else if(y>2400)y-=543;return y}
+function parseDT(s,order){
+  s=(s||"").trim();if(!s)return null;let y,m,d,h=null,mi=0,ap="";let r;
+  const tm=s.match(/(\d{1,2}):(\d{2})(?::\d{2})?\s*(AM|PM|am|pm|a\.m\.|p\.m\.)?/);
+  if(tm){h=+tm[1];mi=+tm[2];ap=(tm[3]||"").toLowerCase().replace(/\./g,"");if(ap==="pm"&&h<12)h+=12;if(ap==="am"&&h===12)h=0}
+  if((r=s.match(/^(\d{4})[-\/.](\d{1,2})[-\/.](\d{1,2})/))){y=+r[1];m=+r[2];d=+r[3]}
+  else if((r=s.match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{2,4})/))){const a=+r[1],b=+r[2];if(order==="mdy"){m=a;d=b}else{d=a;m=b}y=r[3]}
+  else if((r=s.match(/^([A-Za-z]{3})[a-z]*\.?\s+(\d{1,2}),?\s+(\d{2,4})/))){m=MON_EN.indexOf(r[1].toLowerCase())+1;d=+r[2];y=r[3]}
+  else if((r=s.match(/^(\d{1,2})\s+([A-Za-z]{3})[a-z]*\.?,?\s+(\d{2,4})/))){d=+r[1];m=MON_EN.indexOf(r[2].toLowerCase())+1;y=r[3]}
+  else{const t=MON_TH.findIndex(x=>s.includes(x));if(t>=0&&(r=s.match(/^(\d{1,2})\s/))){const yy=s.match(/(\d{4}|\s\d{2}(?=\s|$))/g);d=+r[1];m=t+1;y=yy?yy[yy.length-1].trim():null}}
+  if(!y||!m||!d||m<1||m>12||d<1||d>31)return null;y=yearFix(y);
+  return {date:y+"-"+pad(m)+"-"+pad(d),hour:h};
+}
+function guessOrder(rows,col){let dm=0,md=0;for(const r of rows.slice(0,400)){const x=(r[col]||"").trim().match(/^(\d{1,2})[\/.\-](\d{1,2})[\/.\-]\d{2,4}/);if(!x)continue;if(+x[1]>12)dm++;if(+x[2]>12)md++}return md>dm?"mdy":"dmy"}
+function tagOf(text,defs){const t=(text||"").toLowerCase();
+  const nat=/จีน|chinese|china|中国|华/.test(t)?"จีน":/พม่า|เมียนมา|myanmar|burm/.test(t)?"เมียนมา":/ลาว|\blao/.test(t)?"ลาว":/ไทย|\bthai/.test(t)?"ไทย":null;
+  const typ=/ทัวร์|tour|กรุ๊ป|group/.test(t)?"กรุ๊ปทัวร์":/ขายส่ง|wholesale|ส่ง/.test(t)?"ขายส่ง":/ประจำ|member|regular|vip/.test(t)?"ลูกค้าประจำ":null;
+  const ch=/facebook|เฟส|\bfb\b/.test(t)?"Facebook":/line/.test(t)?"LINE OA":/tiktok/.test(t)?"TikTok Shop":/shopee/.test(t)?"Shopee":/grab|lineman|delivery|เดลิเวอรี|ส่งถึง/.test(t)?"เดลิเวอรี":null;
+  return {nat,typ,ch}}
+function hash(s){let h=5381;for(let i=0;i<s.length;i++)h=((h<<5)+h+s.charCodeAt(i))|0;return (h>>>0).toString(36)}
+function lvBuild(){
+  const {rows,head,map}=LV;const order=$("#lvOrder").value;const g=k=>map[k]!==undefined&&map[k]!==""?map[k]:null;
+  const defC=$("#lvChan").value,defN=$("#lvCust").value,defT=$("#lvType").value;
+  const out=[];let skipped=0,cancelled=0;const seen={};
+  rows.forEach((r,ri)=>{
+    const v=k=>{const i=g(k);return i===null?"":(r[i]||"").trim()};
+    const status=v("status").toLowerCase();if(/cancel|ยกเลิก|void/.test(status)){cancelled++;return}
+    const dt=parseDT(v("date"),order);if(!dt){skipped++;return}
+    let hour=dt.hour;if(hour===null&&v("time")){const t=parseDT("2000-01-01 "+v("time"),order);hour=t?t.hour:null}
+    let amount=num(v("amount"));let qty=g("qty")===null?1:num(v("qty"));
+    if(!amount&&!qty){skipped++;return}
+    const refund=/refund|คืน/.test(v("rtype").toLowerCase())||amount<0||qty<0;
+    qty=Math.abs(qty)||1;amount=Math.abs(amount);
+    const item=g("item")===null?"ใบเสร็จรวม (ไม่แยกสินค้า)":(v("item")||"ไม่ระบุสินค้า")+(v("variant")?` (${v("variant")})`:"");
+    const tagText=[v("dining"),v("comment"),v("customer"),v("store")].join(" ");const tg=tagOf(tagText);
+    const cust=v("customer");
+    const ctype=tg.typ||(cust?"ลูกค้าประจำ":defT);
+    const rec=v("receipt");const key=(rec||dt.date+"|"+(hour??"")+"|r"+ri)+"|"+item;seen[key]=(seen[key]||0)+1;
+    out.push({id:"lv_"+hash(key+"|"+seen[key]+(refund?"|R":"")),date:dt.date,hour:hour??12,product:item,qty:refund?-qty:qty,price:Math.round(amount/qty*100)/100,
+      channel:tg.ch||defC,customer:tg.nat||defN,ctype,src:"loyverse",receipt:rec||"",payment:v("payment")});
+  });
+  LV.out=out;LV.skipped=skipped;LV.cancelled=cancelled;
+}
+function lvRender(){
+  lvBuild();const o=LV.out;
+  const total=o.reduce((s,x)=>s+x.qty*x.price,0),recs=new Set(o.map(x=>x.receipt).filter(Boolean)).size;
+  const ds=o.map(x=>x.date).sort();const refunds=o.filter(x=>x.qty<0).length;
+  const fmtD=s=>{const d=parseISO(s);return d.getDate()+" "+MON[d.getMonth()]+" "+(d.getFullYear()+543)};
+  $("#lvSum").innerHTML=[["รายการสินค้า",fmt(o.length)],["ใบเสร็จ",recs?fmt(recs):"–"],["ยอดขายสุทธิ",baht(total)],["ช่วงวันที่",ds.length?fmtD(ds[0])+" – "+fmtD(ds[ds.length-1]):"–"],["คืนเงิน / ยกเลิก",fmt(refunds)+" / "+fmt(LV.cancelled)],["อ่านไม่ได้ (ข้าม)",fmt(LV.skipped)]].map(([a,b])=>`<div><span>${a}</span><b>${b}</b></div>`).join("");
+  $("#lvRows").innerHTML=o.slice(0,8).map(x=>`<tr><td class="num">${x.date}</td><td class="num">${pad(x.hour)}:00</td><td>${esc(x.product)}</td><td class="r num">${fmt(x.qty)}</td><td class="r num">${baht(x.qty*x.price)}</td><td>${esc(x.customer)}</td><td>${esc(x.ctype)}</td><td>${esc(x.channel)}</td></tr>`).join("")||`<tr><td colspan="8" class="note">ยังอ่านแถวไม่ได้ ลองตั้งคอลัมน์วันที่และยอดขายให้ถูก</td></tr>`;
+  const miss=LV_FIELDS.filter(f=>f.req&&(LV.map[f.k]===undefined||LV.map[f.k]==="")).map(f=>f.label);
+  $("#lvMapNote").textContent=miss.length?`· ต้องเลือก: ${miss.join(", ")}`:`· จับคู่อัตโนมัติ ${Object.values(LV.map).filter(x=>x!=="").length} คอลัมน์`;
+  if(miss.length||!o.length)$("#lvMapBox").open=true;
+  const go=$("#lvGo");go.disabled=!o.length||!canWrite;go.textContent=o.length?`นำเข้า ${fmt(o.length)} รายการ`:"นำเข้า";
+}
+function initLoyverse(){
+  $("#lvFile").addEventListener("change",e=>{
+    const file=e.target.files[0];const msg=$("#lvMsg");if(!file)return;$("#lvFileName").textContent=file.name;
+    const fr=new FileReader();
+    fr.onload=()=>{
+      let text=fr.result;if(/�/.test(text.slice(0,2000))){fr.onload=()=>go(fr.result);fr.readAsText(file,"windows-874");return}go(text)};
+    const go=text=>{
+      const all=parseDelim(text);if(all.length<2){msg.className="msg err";msg.textContent="ไฟล์ว่าง หรือมีแค่หัวตาราง";return}
+      const head=all[0].map(h=>h.trim()),map=guessMap(head);
+      if(map.date===undefined&&map.amount!==undefined){msg.className="msg err";msg.textContent="ไฟล์นี้ไม่มีคอลัมน์วันที่ อาจเป็นรายงาน “ยอดขายตามสินค้า” แบบสรุป ให้ส่งออกจากเมนู ใบเสร็จ → ใบเสร็จตามสินค้า แทน";}
+      else{msg.className="msg";msg.textContent=map.item===undefined?"ไฟล์นี้เป็นใบเสร็จแบบรวม ไม่แยกสินค้า นำเข้าได้แต่จะไม่รู้ว่าขายสินค้าอะไร แนะนำส่งออกแบบ “ใบเสร็จตามสินค้า”":""}
+      LV={head,rows:all.slice(1),map};
+      $("#lvOrder").value=map.date!==undefined?guessOrder(LV.rows,map.date):"dmy";
+      $("#lvMap").innerHTML=LV_FIELDS.map(f=>`<label class="${f.req?"req":""}">${f.label}${f.req?" *":""}<select data-k="${f.k}"><option value="">— ไม่ใช้ —</option>${head.map((h,i)=>`<option value="${i}"${map[f.k]===i?" selected":""}>${esc(h)}</option>`).join("")}</select></label>`).join("");
+      $("#lvPreview").hidden=false;lvRender();
+    };
+    fr.readAsText(file,"utf-8");
+  });
+  $("#lvMap").addEventListener("change",e=>{const s=e.target.closest("select[data-k]");if(!s||!LV)return;LV.map[s.dataset.k]=s.value===""?"":+s.value;if(s.dataset.k==="date"&&s.value!=="")$("#lvOrder").value=guessOrder(LV.rows,+s.value);lvRender()});
+  ["#lvOrder","#lvChan","#lvCust","#lvType"].forEach(id=>$(id).addEventListener("change",()=>{if(LV)lvRender()}));
+  $("#lvCancel").addEventListener("click",()=>{LV=null;$("#lvPreview").hidden=true;$("#lvFile").value="";$("#lvFileName").textContent="";$("#lvMsg").textContent=""});
+  $("#lvGo").addEventListener("click",async()=>{
+    if(!LV||!LV.out.length)return;const msg=$("#lvMsg");
+    if(!DB||!canWrite){msg.className="msg err";msg.textContent="นำเข้าไม่ได้ในมุมมองนี้ ต้องเปิดใน claude.ai และมีสิทธิ์บันทึก";return}
+    const groups={};const ts=new Date().toISOString();
+    LV.out.forEach(x=>{const it=Object.assign({},x,{ts});delete it.id;(groups[x.date]=groups[x.date]||{})[x.id]=it});
+    const keys=Object.keys(groups).sort(),total=LV.out.length;let done=0;
+    const go=$("#lvGo");go.disabled=true;$("#lvCancel").disabled=true;
+    try{for(const k of keys){await writeItems("orders",k,groups[k]);done+=Object.keys(groups[k]).length;msg.className="msg";msg.textContent=`กำลังนำเข้า ${fmt(done)} / ${fmt(total)} รายการ…`;await sleep(120)}
+      msg.className="msg ok";msg.textContent=`นำเข้าจาก Loyverse แล้ว ${fmt(done)} รายการ (${keys.length} วัน) · ใบเสร็จที่เคยนำเข้าแล้วถูกเขียนทับ ไม่นับซ้ำ`;
+      LV=null;$("#lvPreview").hidden=true;$("#lvFile").value="";forceSample=false;}
+    catch(err){msg.className="msg err";msg.textContent=`${errText(err)} (นำเข้าได้ ${fmt(done)} รายการก่อนหยุด กดนำเข้าใหม่ได้ ไม่นับซ้ำ)`}
+    finally{go.disabled=false;$("#lvCancel").disabled=false}
+  });
 }
 
 /* ---------- routing + controls ---------- */
